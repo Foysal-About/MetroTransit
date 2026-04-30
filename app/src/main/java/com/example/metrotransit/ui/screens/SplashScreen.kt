@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsTransit
 import androidx.compose.material3.Icon
@@ -64,5 +65,16 @@ fun SplashScreen(onNavigateToHome: () -> Unit) {
                 color = Color.Gray
             )
         }
+
+        Text(
+            text = "POWERED BY LEADS",
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 48.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = Color(0xFF0056B3),
+            letterSpacing = 2.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }

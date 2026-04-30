@@ -30,6 +30,7 @@ import com.example.metrotransit.viewmodel.HomeViewModel
 fun HomeScreen(
     onShowTrains: (Int, Int) -> Unit,
     onViewStations: () -> Unit,
+    onNavigateToRapidPass: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     Scaffold(
@@ -185,6 +186,49 @@ fun HomeScreen(
                     value = "~35 min",
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Rapid Pass Card Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
+                onClick = onNavigateToRapidPass
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Train,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Rapid Pass Card",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Check balance & recharge your MRT pass",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Button(
+                        onClick = onNavigateToRapidPass,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Text("Manage", fontSize = 12.sp)
+                    }
+                }
             }
         }
     }
