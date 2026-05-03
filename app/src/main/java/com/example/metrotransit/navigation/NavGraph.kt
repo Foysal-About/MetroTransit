@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.metrotransit.ui.screens.*
+import com.example.metrotransit.viewmodel.HomeViewModel
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 
 sealed class Screen(val route: String) {
@@ -21,15 +22,19 @@ sealed class Screen(val route: String) {
     object MRTPassDashboard : Screen("mrtpass_dashboard")
     object MRTPassRecharge : Screen("mrtpass_recharge")
     object MRTPassWebView : Screen("mrtpass_webview")
+    object NFCResult : Screen("nfc_result")
     object PaymentGateway : Screen("payment_gateway/{amount}") {
         fun createRoute(amount: String) = "payment_gateway/$amount"
     }
 }
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    homeViewModel: HomeViewModel          // ← received from MainActivity, not created here
+) {
     val mrtPassViewModel: MRTPassViewModel = viewModel()
-    
+
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route
@@ -41,6 +46,7 @@ fun NavGraph(navController: NavHostController) {
                 }
             })
         }
+
         composable(Screen.Home.route) {
             HomeScreen(
                 onShowTrains = { fromId, toId ->
@@ -51,9 +57,21 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onNavigateToMRTPass = {
                     navController.navigate(Screen.MRTPassLogin.route)
-                }
+                },
+                onNavigateToNFCResult = {
+                    navController.navigate(Screen.NFCResult.route)
+                },
+                viewModel = homeViewModel
             )
         }
+
+        composable(Screen.NFCResult.route) {
+            NFCResultScreen(
+                viewModel = homeViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable(
             route = Screen.Result.route,
             arguments = listOf(
@@ -62,18 +80,19 @@ fun NavGraph(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val fromId = backStackEntry.arguments?.getInt("fromId") ?: 0
-            val toId = backStackEntry.arguments?.getInt("toId") ?: 0
+            val toId   = backStackEntry.arguments?.getInt("toId")   ?: 0
             ResultScreen(
                 fromId = fromId,
-                toId = toId,
+                toId   = toId,
                 onBack = { navController.popBackStack() }
             )
         }
+
         composable(Screen.Stations.route) {
             StationListScreen(onBack = { navController.popBackStack() })
         }
-        
-        // MRT Pass Flow
+
+        // MRT Pass flow
         composable(Screen.MRTPassLogin.route) {
             MRTPassLoginScreen(
                 onLoginSuccess = {
@@ -84,10 +103,11 @@ fun NavGraph(navController: NavHostController) {
                 onOpenWebView = {
                     navController.navigate(Screen.MRTPassWebView.route)
                 },
-                onBack = { navController.popBackStack() },
+                onBack    = { navController.popBackStack() },
                 viewModel = mrtPassViewModel
             )
         }
+
         composable(Screen.MRTPassDashboard.route) {
             MRTPassDashboardScreen(
                 onRecharge = { card ->
@@ -103,17 +123,19 @@ fun NavGraph(navController: NavHostController) {
                 viewModel = mrtPassViewModel
             )
         }
+
         composable(Screen.MRTPassRecharge.route) {
             MRTPassRechargeScreen(
-                onBack = { navController.popBackStack() },
+                onBack             = { navController.popBackStack() },
                 onProceedToPayment = { amount ->
                     navController.navigate(Screen.PaymentGateway.createRoute(amount))
                 },
                 viewModel = mrtPassViewModel
             )
         }
+
         composable(
-            route = Screen.PaymentGateway.route,
+            route     = Screen.PaymentGateway.route,
             arguments = listOf(navArgument("amount") { type = NavType.StringType })
         ) { backStackEntry ->
             val amount = backStackEntry.arguments?.getString("amount") ?: "0.0"
@@ -131,6 +153,7 @@ fun NavGraph(navController: NavHostController) {
                 }
             )
         }
+
         composable(Screen.MRTPassWebView.route) {
             MRTPassWebViewScreen(onBack = { navController.popBackStack() })
         }
