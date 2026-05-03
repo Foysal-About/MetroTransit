@@ -148,6 +148,7 @@ fun NFCResultScreen(
                                 .align(Alignment.CenterEnd)
                                 .clickable {
                                     viewModel.resetScan()
+                                    viewModel.showScanSheet = true
                                     onBack()
                                 },
                             color = Color.Black,
@@ -268,16 +269,16 @@ fun ResultTransactionItem(
                 style = MaterialTheme.typography.bodySmall
             )
             // Balance after this trip, shown in muted text
-            if (balanceAfter > 0) {
+            if (balanceAfter >= 0) {
                 Text(
-                    "Balance after: ৳ ${balanceAfter / 100}",
-                    color = Color.DarkGray,
+                    "Balance after: ৳ $balanceAfter",
+                    color = Color.Gray,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
         }
         Text(
-            if (amount >= 0) "+৳ $amount" else "৳ $amount",
+            if (amount >= 0) "৳ $amount" else "৳ $amount",
             color = if (amount >= 0) Color(0xFF81C784) else Color(0xFFE57373),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold

@@ -1,5 +1,6 @@
 package com.example.metrotransit.ui.screens
 
+import android.app.Activity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AltRoute
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.*
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
+import com.example.metrotransit.nfc.NfcManager
 import com.example.metrotransit.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,26 +46,44 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
-    var showNFCSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+
+    val context = LocalContext.current as Activity
+    val nfcManager = remember { NfcManager(context) }
+
+    if (viewModel.showScanSheet) {
+        DisposableEffect(Unit) {
+            nfcManager.startScanning(
+                onScanningStatusChange = { viewModel.isScanning = it },
+                onResponseRead = { response ->
+                    viewModel.processNfcResponse(response)
+                },
+                onError = { error ->
+                    viewModel.scanError = error
+                }
+            )
+            onDispose {
+                nfcManager.stopScanning()
+            }
+        }
+    }
 
     // When a scan completes (isScanning goes false AND we have a balance),
     // close the bottom sheet and navigate to the results screen.
-    // This replaces the old activity?.lastScannedTag polling approach.
     val isScanning       = viewModel.isScanning
     val hasResult        = viewModel.scannedBalance != null || viewModel.scanError != null
 
     LaunchedEffect(isScanning, hasResult) {
-        if (!isScanning && hasResult && showNFCSheet) {
-            showNFCSheet = false
+        if (!isScanning && hasResult && viewModel.showScanSheet) {
+            viewModel.showScanSheet = false
             onNavigateToNFCResult()
         }
     }
 
-    if (showNFCSheet) {
+    if (viewModel.showScanSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                showNFCSheet = false
+                viewModel.showScanSheet = false
                 viewModel.resetScan()
             },
             sheetState = sheetState,
@@ -70,7 +94,7 @@ fun HomeScreen(
             NFCScanBottomSheetContent(
                 isScanning = isScanning,
                 onCancel = {
-                    showNFCSheet = false
+                    viewModel.showScanSheet = false
                     viewModel.resetScan()
                 }
             )
@@ -208,7 +232,10 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .height(64.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black
+                )
             ) {
                 Icon(Icons.AutoMirrored.Filled.AltRoute, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -289,14 +316,14 @@ fun HomeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(Color(0xFFF1F8E9))
-                            .padding(12.dp),
+                            .padding(vertical = 16.dp, horizontal = 12.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        MRTPassFeatureItem(icon = "\uD83D\uDCB3", label = "Balance")
-                        MRTPassFeatureItem(icon = "\uD83D\uDCAF", label = "Recharge")
-                        MRTPassFeatureItem(icon = "\u2705",       label = "Manage")
+                        CardFeatureItem(icon = Icons.Default.AccountBalanceWallet, label = "Balance", themeColor = Color(0xFF006A4E))
+                        CardFeatureItem(icon = Icons.Default.AddCard, label = "Recharge", themeColor = Color(0xFF006A4E))
+                        CardFeatureItem(icon = Icons.AutoMirrored.Filled.FactCheck, label = "Manage", themeColor = Color(0xFF006A4E))
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -305,11 +332,18 @@ fun HomeScreen(
                         onClick = onNavigateToMRTPass,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E))
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E), contentColor = Color.White)
                     ) {
-                        Text("Sign In to Manage Card", fontWeight = FontWeight.Bold)
+                        Icon(
+                            Icons.AutoMirrored.Filled.Login,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Sign In to Portal", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -319,7 +353,7 @@ fun HomeScreen(
             // ── Metro Buddy / NFC card ─────────────────────────────────────
             MetroBuddyCard(onScanClick = {
                 viewModel.resetScan()   // clear any previous result before new scan
-                showNFCSheet = true
+                viewModel.showScanSheet = true
             })
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -343,14 +377,14 @@ fun MetroBuddyCard(onScanClick: () -> Unit) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
-                    shape = CircleShape,
-                    color = Color(0xFF2E7D32).copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF3F0FF),
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         Icons.Default.Contactless,
                         contentDescription = null,
-                        tint = Color(0xFF2E7D32),
+                        tint = Color(0xFF5E42F3),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -374,14 +408,14 @@ fun MetroBuddyCard(onScanClick: () -> Unit) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE8F5E9))
-                    .padding(12.dp),
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF3F0FF))
+                    .padding(vertical = 16.dp, horizontal = 12.dp),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                MetroBuddyFeatureItem(icon = Icons.Default.AccountBalanceWallet, label = "Balance")
-                MetroBuddyFeatureItem(icon = Icons.AutoMirrored.Filled.ReceiptLong, label = "Last 19 Trips")
-                MetroBuddyFeatureItem(icon = Icons.Default.Analytics, label = "Insights")
+                CardFeatureItem(icon = Icons.Default.AccountBalanceWallet, label = "Balance", themeColor = Color(0xFF5E42F3))
+                CardFeatureItem(icon = Icons.Default.History, label = "Last 10 Trips", themeColor = Color(0xFF5E42F3))
+                CardFeatureItem(icon = Icons.AutoMirrored.Filled.TrendingUp, label = "Insights", themeColor = Color(0xFF5E42F3))
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -392,12 +426,13 @@ fun MetroBuddyCard(onScanClick: () -> Unit) {
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5E42F3), contentColor = Color.White)
             ) {
                 Icon(
-                    Icons.Default.Nfc,
+                    Icons.Default.Contactless,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.White
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text("Tap Card to Scan", fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -508,29 +543,27 @@ fun NFCScanBottomSheetContent(
 // Small reusable composables
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun MetroBuddyFeatureItem(icon: ImageVector, label: String) {
+fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = Color(0xFF2E7D32),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = themeColor,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(6.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
+            color = Color.Black,
             fontWeight = FontWeight.Medium
         )
-    }
-}
-
-@Composable
-fun MRTPassFeatureItem(icon: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(icon, fontSize = 24.sp)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
     }
 }
 

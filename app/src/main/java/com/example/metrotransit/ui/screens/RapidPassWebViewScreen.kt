@@ -13,7 +13,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MRTPassWebViewScreen(
-    url: String = "https://rapidpass.com.bd",
+    url: String = "https://mrtpass.com.bd",
     onBack: () -> Unit
 ) {
     Scaffold(
