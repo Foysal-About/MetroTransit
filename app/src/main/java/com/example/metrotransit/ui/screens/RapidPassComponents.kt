@@ -51,7 +51,7 @@ fun PhysicalCardVisual(type: String) {
                         fontSize = 20.sp
                     )
                     Text(
-                        "Rapid Pass Compatible", 
+                        "MRT Pass Compatible", 
                         modifier = Modifier.align(Alignment.TopEnd).padding(top = 36.dp, end = 12.dp),
                         color = Color(0xFFD32F2F),
                         fontSize = 10.sp
@@ -84,7 +84,7 @@ fun PhysicalCardVisual(type: String) {
                 }
             }
         } else {
-            // Rapid Pass Style
+            // MRT Pass Style
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -101,7 +101,7 @@ fun PhysicalCardVisual(type: String) {
                         }
                         Text("One Card for All Transport", fontSize = 8.sp, color = Color(0xFF1976D2))
                     }
-                    Text("Rapid Pass", color = Color(0xFF1976D2), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("MRT Pass", color = Color(0xFF1976D2), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
                 
                 Box(

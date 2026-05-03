@@ -12,14 +12,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RapidPassWebViewScreen(
+fun MRTPassWebViewScreen(
     url: String = "https://rapidpass.com.bd",
     onBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Official RapidPass") },
+                title = { Text("Official MRT Pass") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

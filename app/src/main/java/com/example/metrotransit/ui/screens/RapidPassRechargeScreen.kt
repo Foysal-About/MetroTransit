@@ -25,17 +25,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.metrotransit.data.RapidPassCard
-import com.example.metrotransit.viewmodel.RapidPassViewModel
+import com.example.metrotransit.data.MRTPassCard
+import com.example.metrotransit.viewmodel.MRTPassViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RapidPassRechargeScreen(
+fun MRTPassRechargeScreen(
     onBack: () -> Unit,
     onProceedToPayment: (String) -> Unit,
-    viewModel: RapidPassViewModel
+    viewModel: MRTPassViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

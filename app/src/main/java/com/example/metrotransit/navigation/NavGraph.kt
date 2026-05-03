@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.metrotransit.ui.screens.*
-import com.example.metrotransit.viewmodel.RapidPassViewModel
+import com.example.metrotransit.viewmodel.MRTPassViewModel
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -17,10 +17,10 @@ sealed class Screen(val route: String) {
         fun createRoute(fromId: Int, toId: Int) = "result/$fromId/$toId"
     }
     object Stations : Screen("stations")
-    object RapidPassLogin : Screen("rapidpass_login")
-    object RapidPassDashboard : Screen("rapidpass_dashboard")
-    object RapidPassRecharge : Screen("rapidpass_recharge")
-    object RapidPassWebView : Screen("rapidpass_webview")
+    object MRTPassLogin : Screen("mrtpass_login")
+    object MRTPassDashboard : Screen("mrtpass_dashboard")
+    object MRTPassRecharge : Screen("mrtpass_recharge")
+    object MRTPassWebView : Screen("mrtpass_webview")
     object PaymentGateway : Screen("payment_gateway/{amount}") {
         fun createRoute(amount: String) = "payment_gateway/$amount"
     }
@@ -28,7 +28,7 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun NavGraph(navController: NavHostController) {
-    val rapidPassViewModel: RapidPassViewModel = viewModel()
+    val mrtPassViewModel: MRTPassViewModel = viewModel()
     
     NavHost(
         navController = navController,
@@ -49,8 +49,8 @@ fun NavGraph(navController: NavHostController) {
                 onViewStations = {
                     navController.navigate(Screen.Stations.route)
                 },
-                onNavigateToRapidPass = {
-                    navController.navigate(Screen.RapidPassLogin.route)
+                onNavigateToMRTPass = {
+                    navController.navigate(Screen.MRTPassLogin.route)
                 }
             )
         }
@@ -73,43 +73,43 @@ fun NavGraph(navController: NavHostController) {
             StationListScreen(onBack = { navController.popBackStack() })
         }
         
-        // RapidPass Flow
-        composable(Screen.RapidPassLogin.route) {
-            RapidPassLoginScreen(
+        // MRT Pass Flow
+        composable(Screen.MRTPassLogin.route) {
+            MRTPassLoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.RapidPassDashboard.route) {
-                        popUpTo(Screen.RapidPassLogin.route) { inclusive = true }
+                    navController.navigate(Screen.MRTPassDashboard.route) {
+                        popUpTo(Screen.MRTPassLogin.route) { inclusive = true }
                     }
                 },
                 onOpenWebView = {
-                    navController.navigate(Screen.RapidPassWebView.route)
+                    navController.navigate(Screen.MRTPassWebView.route)
                 },
                 onBack = { navController.popBackStack() },
-                viewModel = rapidPassViewModel
+                viewModel = mrtPassViewModel
             )
         }
-        composable(Screen.RapidPassDashboard.route) {
-            RapidPassDashboardScreen(
+        composable(Screen.MRTPassDashboard.route) {
+            MRTPassDashboardScreen(
                 onRecharge = { card ->
-                    rapidPassViewModel.selectedCard = card
-                    navController.navigate(Screen.RapidPassRecharge.route)
+                    mrtPassViewModel.selectedCard = card
+                    navController.navigate(Screen.MRTPassRecharge.route)
                 },
                 onLogout = {
-                    rapidPassViewModel.logout()
+                    mrtPassViewModel.logout()
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.RapidPassDashboard.route) { inclusive = true }
+                        popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
                     }
                 },
-                viewModel = rapidPassViewModel
+                viewModel = mrtPassViewModel
             )
         }
-        composable(Screen.RapidPassRecharge.route) {
-            RapidPassRechargeScreen(
+        composable(Screen.MRTPassRecharge.route) {
+            MRTPassRechargeScreen(
                 onBack = { navController.popBackStack() },
                 onProceedToPayment = { amount ->
                     navController.navigate(Screen.PaymentGateway.createRoute(amount))
                 },
-                viewModel = rapidPassViewModel
+                viewModel = mrtPassViewModel
             )
         }
         composable(
@@ -121,9 +121,9 @@ fun NavGraph(navController: NavHostController) {
                 amount = amount,
                 onPaymentComplete = { success ->
                     if (success) {
-                        rapidPassViewModel.recharge()
-                        navController.navigate(Screen.RapidPassDashboard.route) {
-                            popUpTo(Screen.RapidPassDashboard.route) { inclusive = true }
+                        mrtPassViewModel.recharge()
+                        navController.navigate(Screen.MRTPassDashboard.route) {
+                            popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
                         }
                     } else {
                         navController.popBackStack()
@@ -131,8 +131,8 @@ fun NavGraph(navController: NavHostController) {
                 }
             )
         }
-        composable(Screen.RapidPassWebView.route) {
-            RapidPassWebViewScreen(onBack = { navController.popBackStack() })
+        composable(Screen.MRTPassWebView.route) {
+            MRTPassWebViewScreen(onBack = { navController.popBackStack() })
         }
     }
 }

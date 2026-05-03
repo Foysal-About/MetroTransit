@@ -4,11 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.metrotransit.data.RapidPassCard
+import com.example.metrotransit.data.MRTPassCard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class RapidPassViewModel : ViewModel() {
+class MRTPassViewModel : ViewModel() {
     var email by mutableStateOf("")
     var password by mutableStateOf("")
     var passwordVisible by mutableStateOf(false)
@@ -17,12 +17,12 @@ class RapidPassViewModel : ViewModel() {
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
     private val _cards = MutableStateFlow(listOf(
-        RapidPassCard("SYED FOYSAL", "MP31C23112300869", "Active", 35.00, "MRT"),
-        RapidPassCard("Syed Foysal", "MP31C23112300999", "Active", 141.00, "RAPID")
+        MRTPassCard("SYED FOYSAL", "MP31C23112300869", "Active", 35.00, "MRT"),
+        MRTPassCard("Syed Foysal", "MP31C23112300999", "Active", 141.00, "RAPID")
     ))
     val cards = _cards.asStateFlow()
 
-    var selectedCard by mutableStateOf<RapidPassCard?>(null)
+    var selectedCard by mutableStateOf<MRTPassCard?>(null)
     var rechargeAmount by mutableStateOf("")
     var paymentMethod by mutableStateOf("Bkash")
 

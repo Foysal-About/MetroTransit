@@ -1,6 +1,6 @@
 package com.example.metrotransit.data
 
-data class RapidPassCard(
+data class MRTPassCard(
     val cardName: String,
     val cardNumber: String,
     val status: String,
@@ -11,5 +11,5 @@ data class RapidPassCard(
 data class UserProfile(
     val name: String,
     val email: String,
-    val cards: List<RapidPassCard>
+    val cards: List<MRTPassCard>
 )

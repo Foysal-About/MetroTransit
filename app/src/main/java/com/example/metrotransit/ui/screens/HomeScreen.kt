@@ -30,7 +30,7 @@ import com.example.metrotransit.viewmodel.HomeViewModel
 fun HomeScreen(
     onShowTrains: (Int, Int) -> Unit,
     onViewStations: () -> Unit,
-    onNavigateToRapidPass: () -> Unit,
+    onNavigateToMRTPass: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     Scaffold(
@@ -190,7 +190,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Rapid Pass Card Section
+            // MRT Pass Card Section
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -198,7 +198,7 @@ fun HomeScreen(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                onClick = onNavigateToRapidPass
+                onClick = onNavigateToMRTPass
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -217,7 +217,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                "Rapid Pass Portal",
+                                "MRT Pass Portal",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -239,15 +239,15 @@ fun HomeScreen(
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        RapidPassFeatureItem(icon = "\uD83D\uDCB3", label = "Balance")
-                        RapidPassFeatureItem(icon = "\uD83D\uDCAF", label = "Recharge")
-                        RapidPassFeatureItem(icon = "\u2705", label = "Manage")
+                        MRTPassFeatureItem(icon = "\uD83D\uDCB3", label = "Balance")
+                        MRTPassFeatureItem(icon = "\uD83D\uDCAF", label = "Recharge")
+                        MRTPassFeatureItem(icon = "\u2705", label = "Manage")
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = onNavigateToRapidPass,
+                        onClick = onNavigateToMRTPass,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E))
@@ -261,7 +261,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun RapidPassFeatureItem(icon: String, label: String) {
+fun MRTPassFeatureItem(icon: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(icon, fontSize = 24.sp)
         Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)

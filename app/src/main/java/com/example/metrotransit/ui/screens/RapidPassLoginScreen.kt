@@ -20,16 +20,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.metrotransit.viewmodel.RapidPassViewModel
+import com.example.metrotransit.viewmodel.MRTPassViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RapidPassLoginScreen(
+fun MRTPassLoginScreen(
     onLoginSuccess: () -> Unit,
     onOpenWebView: () -> Unit,
     onBack: () -> Unit,
-    viewModel: RapidPassViewModel
+    viewModel: MRTPassViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -38,7 +38,7 @@ fun RapidPassLoginScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Rapid Pass Login") },
+                title = { Text("MRT Pass Login") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         // Using a simple back icon or text if AutoMirrored not preferred here
@@ -58,7 +58,7 @@ fun RapidPassLoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
             
             Text(
-                text = "Rapid Pass Card\u00AE",
+                text = "MRT Pass Card\u00AE",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF006A4E)
@@ -152,7 +152,7 @@ fun RapidPassLoginScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Open Official RapidPass Website", color = Color(0xFF006A4E))
+                Text("Open Official MRT Pass Website", color = Color(0xFF006A4E))
             }
         }
     }

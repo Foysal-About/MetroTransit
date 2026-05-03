@@ -17,16 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.metrotransit.data.RapidPassCard
-import com.example.metrotransit.viewmodel.RapidPassViewModel
+import com.example.metrotransit.data.MRTPassCard
+import com.example.metrotransit.viewmodel.MRTPassViewModel
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RapidPassDashboardScreen(
-    onRecharge: (RapidPassCard) -> Unit,
+fun MRTPassDashboardScreen(
+    onRecharge: (MRTPassCard) -> Unit,
     onLogout: () -> Unit,
-    viewModel: RapidPassViewModel
+    viewModel: MRTPassViewModel
 ) {
     val cards by viewModel.cards.collectAsState()
 
@@ -98,7 +98,7 @@ fun RapidPassDashboardScreen(
 
 @Composable
 fun EnhancedCardItem(
-    card: RapidPassCard,
+    card: MRTPassCard,
     onSeeDetails: () -> Unit,
     onRecharge: () -> Unit
 ) {
