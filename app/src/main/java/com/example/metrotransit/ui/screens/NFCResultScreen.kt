@@ -97,14 +97,14 @@ fun NFCResultScreen(
                         Text(
                             "⚠️ Scan Failed",
                             color = Color(0xFFE57373),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             scanError,
                             color = Color.LightGray,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(20.dp))
@@ -140,7 +140,7 @@ fun NFCResultScreen(
                             modifier = Modifier.align(Alignment.Center),
                             color = Color.Black,
                             fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleSmall
                         )
                         Text(
                             "Rescan",
@@ -166,13 +166,13 @@ fun NFCResultScreen(
                         Text(
                             "Current Balance",
                             color = Color.LightGray,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleSmall
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "৳ ${balance.toInt()}",
                             color = if (balance < 20) Color(0xFFE57373) else Color.White,
-                            style = MaterialTheme.typography.displayMedium,
+                            style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold
                         )
                         if (balance < 20) {
@@ -180,7 +180,7 @@ fun NFCResultScreen(
                             Text(
                                 "Balance too low for the next trip. Top up needed.",
                                 color = Color(0xFFE57373),
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelSmall,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -201,7 +201,7 @@ fun NFCResultScreen(
                         Text(
                             "Recent Journeys (${transactions.size})",
                             color = Color.White,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -260,27 +260,27 @@ fun ResultTransactionItem(
             Text(
                 route,
                 color = Color.White,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 date,
                 color = Color.Gray,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.labelSmall
             )
             // Balance after this trip, shown in muted text
             if (balanceAfter >= 0) {
                 Text(
                     "Balance after: ৳ $balanceAfter",
                     color = Color.Gray,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }
         Text(
             if (amount >= 0) "৳ $amount" else "৳ $amount",
             color = if (amount >= 0) Color(0xFF81C784) else Color(0xFFE57373),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
     }

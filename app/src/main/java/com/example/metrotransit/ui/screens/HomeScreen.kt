@@ -108,11 +108,11 @@ fun HomeScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             "MetroTransit BD",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
                             "Dhaka Metro Rail",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }
@@ -239,7 +239,7 @@ fun HomeScreen(
             ) {
                 Icon(Icons.AutoMirrored.Filled.AltRoute, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Show Next Trains", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Show Next Trains", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -247,7 +247,7 @@ fun HomeScreen(
             Text(
                 "MRT Line-6 Route",
                 modifier = Modifier.padding(horizontal = 24.dp),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
 
@@ -300,12 +300,12 @@ fun HomeScreen(
                         Column {
                             Text(
                                 "MRT Pass Portal",
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 "Manage your cards online",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = Color.Gray
                             )
                         }
@@ -343,7 +343,7 @@ fun HomeScreen(
                             tint = Color.White
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Sign In to Portal", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("Sign In to Portal", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -392,12 +392,12 @@ fun MetroBuddyCard(onScanClick: () -> Unit) {
                 Column {
                     Text(
                         "Metro Buddy",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Check balance & travel history with NFC",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
                 }
@@ -435,7 +435,7 @@ fun MetroBuddyCard(onScanClick: () -> Unit) {
                     tint = Color.White
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("Tap Card to Scan", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Tap Card to Scan", fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -483,7 +483,7 @@ fun NFCScanBottomSheetContent(
 
         Text(
             if (isScanning) "Reading Card…" else "Ready to Scan",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
@@ -495,7 +495,7 @@ fun NFCScanBottomSheetContent(
                 "Hold the card still while we read it"
             else
                 "Hold your phone near your transit card",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = Color.White.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
@@ -532,7 +532,7 @@ fun NFCScanBottomSheetContent(
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
         ) {
-            Text("Cancel", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -610,7 +610,7 @@ fun StationSelector(
                 focusedIndicatorColor   = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
             ),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
@@ -647,8 +647,8 @@ fun InfoCard(title: String, value: String, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(title, style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.labelSmall)
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
     }
 }

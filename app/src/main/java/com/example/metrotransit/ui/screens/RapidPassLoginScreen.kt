@@ -59,13 +59,13 @@ fun MRTPassLoginScreen(
             
             Text(
                 text = "MRT Pass Card\u00AE",
-                fontSize = 28.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF006A4E)
             )
             Text(
                 text = "One Card for All Transport",
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 color = Color.Gray
             )
             
@@ -130,7 +130,7 @@ fun MRTPassLoginScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E))
             ) {
-                Text("Sign In", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(16.dp))

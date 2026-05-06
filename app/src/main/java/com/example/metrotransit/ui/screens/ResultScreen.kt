@@ -81,13 +81,13 @@ fun ResultScreen(
                     Text(
                         text = "ROUTE",
                         color = Color.Gray,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${viewModel.fromStation?.name} \u2192 ${viewModel.toStation?.name}",
                         color = Color.Yellow,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -96,13 +96,13 @@ fun ResultScreen(
                     Text(
                         text = "CURRENT TIME",
                         color = Color.Gray,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = currentTime,
                         color = Color(0xFF00FF00),
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -118,7 +118,7 @@ fun ResultScreen(
                 Text(
                     text = "ESTIMATED TRAVEL TIME: ${viewModel.estimatedTime} MIN (${viewModel.stationCount} STATIONS)",
                     color = Color.White,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -133,9 +133,9 @@ fun ResultScreen(
                     .background(Color(0xFF333333), RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                     .padding(12.dp)
             ) {
-                Text("DESTINATION", Modifier.weight(2.3f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
-                Text("PLATFORM", Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, textAlign = TextAlign.Center)
-                Text("DEPARTURE", Modifier.weight(1.2f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, textAlign = TextAlign.End)
+                Text("DESTINATION", Modifier.weight(2.3f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                Text("PLATFORM", Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp, textAlign = TextAlign.Center)
+                Text("DEPARTURE", Modifier.weight(1.2f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp, textAlign = TextAlign.End)
             }
 
             // Train List
@@ -169,7 +169,7 @@ fun ResultScreen(
                 Text(
                     "NETWORK STATUS: OPERATIONAL",
                     color = Color(0xFF00FF00),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.Center),
                     fontFamily = FontFamily.Monospace
                 )
@@ -190,7 +190,7 @@ fun TrainRow(train: TrainSchedule) {
             text = train.destination.uppercase(),
             modifier = Modifier.weight(2.3f),
             color = Color(0xFF00FF00), // Neon Green
-            fontSize = 18.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace
         )
@@ -198,7 +198,7 @@ fun TrainRow(train: TrainSchedule) {
             text = train.platform.toString(),
             modifier = Modifier.weight(1f),
             color = Color.Yellow,
-            fontSize = 20.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             textAlign = TextAlign.Center
@@ -207,7 +207,7 @@ fun TrainRow(train: TrainSchedule) {
             text = train.departureTime,
             modifier = Modifier.weight(1.2f),
             color = Color(0xFF00FF00), // Neon Green
-            fontSize = 20.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             textAlign = TextAlign.End

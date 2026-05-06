@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Menu
@@ -41,6 +42,9 @@ fun MRTPassRechargeScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
+    // Guard to prevent multiple back navigation on double tap
+    var isBackTriggered by remember { mutableStateOf(false) }
+    
     val selectedCard = viewModel.selectedCard ?: return
     
     val amounts = listOf("100", "200", "500", "1,000", "2,000", "Other")
@@ -56,8 +60,13 @@ fun MRTPassRechargeScreen(
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    IconButton(onClick = {
+                        if (!isBackTriggered) {
+                            isBackTriggered = true
+                            onBack()
+                        }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {

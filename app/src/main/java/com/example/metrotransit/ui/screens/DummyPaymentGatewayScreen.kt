@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun DummyPaymentGatewayScreen(
     amount: String,
+    paymentMethod: String = "bKash",
     onPaymentComplete: (Boolean) -> Unit
 ) {
     var isProcessing by remember { mutableStateOf(true) }
@@ -48,7 +49,7 @@ fun DummyPaymentGatewayScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFD32F2F)
                     )
-                    Text(text = "Dummy Payment Gateway", fontSize = 12.sp, color = Color.Gray)
+                    Text(text = "Gateway: $paymentMethod", fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
                     
                     Spacer(modifier = Modifier.height(32.dp))
                     
@@ -60,7 +61,7 @@ fun DummyPaymentGatewayScreen(
                     Text(text = "\u09f3 $amount", fontSize = 28.sp, fontWeight = FontWeight.Black)
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Please do not close this window...", fontSize = 12.sp, color = Color.Gray)
+                    Text(text = "Redirecting to $paymentMethod secure portal...", fontSize = 12.sp, color = Color.Gray)
                 }
             }
         } else {
