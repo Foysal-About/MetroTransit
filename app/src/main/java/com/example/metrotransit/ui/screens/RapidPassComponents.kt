@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,102 +24,143 @@ fun PhysicalCardVisual(type: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(0.5.dp, Color.LightGray, RoundedCornerShape(12.dp))
+            .height(200.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (type == "MRT") {
+                    Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF3B82F6)))
+                } else {
+                    Brush.linearGradient(listOf(Color(0xFF065F46), Color(0xFF10B981)))
+                }
+            )
+            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     ) {
+        // Glass Reflection Overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        0.0f to Color.White.copy(alpha = 0.2f),
+                        0.4f to Color.Transparent,
+                        1.0f to Color.White.copy(alpha = 0.1f),
+                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+                    )
+                )
+        )
+
         if (type == "MRT") {
             // MRT Pass Style
-            Column {
-                Box(
-                    modifier = Modifier
-                        .weight(2f)
-                        .fillMaxWidth()
-                        .background(Brush.verticalGradient(listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB))))
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    // Scenic background simulation
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            // Icons at top left
-                            Box(modifier = Modifier.size(16.dp).background(Color.DarkGray, RoundedCornerShape(2.dp)))
-                            Box(modifier = Modifier.size(16.dp).background(Color.DarkGray, RoundedCornerShape(2.dp)))
-                            Box(modifier = Modifier.size(16.dp).background(Color.DarkGray, RoundedCornerShape(2.dp)))
-                        }
+                    Column {
+                        Text(
+                            "MRT Pass",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 22.sp
+                        )
+                        Text(
+                            "Dhaka Metro Rail",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
-                    Text(
-                        "MRT Pass", 
-                        modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
-                        color = Color(0xFFD32F2F),
-                        fontWeight = FontWeight.Black,
-                        fontSize = 20.sp
+                    // Chip simulation
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp, 30.dp)
+                            .background(
+                                Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B))),
+                                RoundedCornerShape(4.dp)
+                            )
+                            .border(0.5.dp, Color.Black.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
                     )
-                    Text(
-                        "MRT Pass Compatible", 
-                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 36.dp, end = 12.dp),
-                        color = Color(0xFFD32F2F),
-                        fontSize = 10.sp
-                    )
-                    // Simplified National Martyrs' Memorial drawing
-                    Box(modifier = Modifier.align(Alignment.BottomCenter).size(100.dp, 60.dp), contentAlignment = Alignment.BottomCenter) {
-                        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.5f)))))
-                        Text("\u26F2", fontSize = 40.sp) // Fountain/Monument emoji
-                    }
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .background(Color(0xFF006A4E))
-                        .padding(8.dp)
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(shape = RoundedCornerShape(100.dp), color = Color.White, modifier = Modifier.size(24.dp)) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text("\uD83C\uDDE7\uD83C\uDDE9", fontSize = 12.sp) 
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Dhaka Mass Transit Company Limited", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            Text("Road Transport and Highways Division", color = Color.White, fontSize = 8.sp)
-                        }
+                    Column {
+                        Text(
+                            "VALID THRU",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "12/30",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
+                    
+                    // Contactless Icon
+                    Icon(
+                        imageVector = Icons.Default.Wifi,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(24.dp).graphicsLayer(rotationZ = 90f)
+                    )
                 }
             }
         } else {
-            // MRT Pass Style
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF1F8E9))
-            ) {
+            // Rapid Pass Style (Greenish)
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Column {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            repeat(5) { Box(modifier = Modifier.size(12.dp).background(Color(0xFF1976D2), RoundedCornerShape(2.dp))) }
-                        }
-                        Text("One Card for All Transport", fontSize = 8.sp, color = Color(0xFF1976D2))
+                        Text(
+                            "Rapid Pass",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 22.sp
+                        )
                     }
-                    Text("MRT Pass", color = Color(0xFF1976D2), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp, 30.dp)
+                            .background(
+                                Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B))),
+                                RoundedCornerShape(4.dp)
+                            )
+                    )
                 }
-                
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .background(Color.White, RoundedCornerShape(8.dp))
-                        .border(1.dp, Color(0xFFBBDEFB), RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Text("\uD83D\uDE86 \uD83D\uDE8C \u26F4", fontSize = 40.sp)
+                    Text(
+                        "METRO TRANSIT",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp
+                    )
+                    
+                    Text(
+                        "\uD83D\uDE86", // Train emoji
+                        fontSize = 32.sp
+                    )
                 }
-                
-                Box(modifier = Modifier.fillMaxWidth().height(10.dp).background(Color(0xFF1976D2)))
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -41,8 +42,10 @@ fun MRTPassLoginScreen(
                 title = { Text("MRT Pass Login") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        // Using a simple back icon or text if AutoMirrored not preferred here
-                        Text("\u2190", fontSize = 24.sp) 
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 }
             )
@@ -63,12 +66,6 @@ fun MRTPassLoginScreen(
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF006A4E)
             )
-            Text(
-                text = "One Card for All Transport",
-                fontSize = 13.sp,
-                color = Color.Gray
-            )
-            
             Spacer(modifier = Modifier.height(40.dp))
             
             OutlinedTextField(

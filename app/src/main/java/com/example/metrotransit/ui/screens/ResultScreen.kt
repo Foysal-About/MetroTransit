@@ -49,7 +49,7 @@ fun ResultScreen(
                     Text(
                         "STATION MONITOR", 
                         color = Color.White, 
-                        letterSpacing = 2.sp,
+                        letterSpacing = 1.5.sp,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black)
                     ) 
                 },
@@ -58,7 +58,7 @@ fun ResultScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0A0A))
             )
         },
         containerColor = Color.Black
@@ -67,27 +67,30 @@ fun ResultScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(Color.Black)
         ) {
             // Header Info Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF1A1A1A))
-                    .padding(16.dp),
+                    .background(Color(0xFF121212))
+                    .padding(vertical = 20.dp, horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "ROUTE",
-                        color = Color.Gray,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
+                        color = Color(0xFF666666),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "${viewModel.fromStation?.name} \u2192 ${viewModel.toStation?.name}",
-                        color = Color.Yellow,
-                        fontSize = 14.sp,
+                        color = Color(0xFFFFD700), // Gold
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -95,14 +98,16 @@ fun ResultScreen(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "CURRENT TIME",
-                        color = Color.Gray,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
+                        color = Color(0xFF666666),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = currentTime,
-                        color = Color(0xFF00FF00),
-                        fontSize = 22.sp,
+                        color = Color(0xFF39FF14), // Neon Green
+                        fontSize = 24.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -113,29 +118,30 @@ fun ResultScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF006A4E)) // MRT Brand Green
-                    .padding(vertical = 4.dp, horizontal = 16.dp)
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
             ) {
                 Text(
                     text = "ESTIMATED TRAVEL TIME: ${viewModel.estimatedTime} MIN (${viewModel.stationCount} STATIONS)",
                     color = Color.White,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.5.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Table Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .background(Color(0xFF333333), RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                    .padding(12.dp)
+                    .background(Color(0xFF1A1A1A), RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                    .padding(14.dp)
             ) {
-                Text("DESTINATION", Modifier.weight(2.3f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp)
-                Text("PLATFORM", Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp, textAlign = TextAlign.Center)
-                Text("DEPARTURE", Modifier.weight(1.2f), color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp, textAlign = TextAlign.End)
+                Text("DESTINATION", Modifier.weight(2.3f), color = Color(0xFFAAAAAA), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 1.sp)
+                Text("PLATFORM", Modifier.weight(1f), color = Color(0xFFAAAAAA), fontWeight = FontWeight.Bold, fontSize = 11.sp, textAlign = TextAlign.Center, letterSpacing = 1.sp)
+                Text("DEPARTURE", Modifier.weight(1.2f), color = Color(0xFFAAAAAA), fontWeight = FontWeight.Bold, fontSize = 11.sp, textAlign = TextAlign.End, letterSpacing = 1.sp)
             }
 
             // Train List
@@ -147,11 +153,12 @@ fun ResultScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .border(1.dp, Color(0xFF333333), RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                        .border(1.dp, Color(0xFF1A1A1A), RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                        .background(Color(0xFF050505), RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
                 ) {
                     items(viewModel.trains) { train ->
                         TrainRow(train)
-                        HorizontalDivider(color = Color(0xFF222222), thickness = 1.dp)
+                        HorizontalDivider(color = Color(0xFF1A1A1A), thickness = 1.dp)
                     }
                 }
             }
@@ -163,15 +170,17 @@ fun ResultScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .border(1.dp, Color.Green.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                    .padding(8.dp)
+                    .border(1.dp, Color(0xFF39FF14).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                    .padding(12.dp)
             ) {
                 Text(
                     "NETWORK STATUS: OPERATIONAL",
-                    color = Color(0xFF00FF00),
+                    color = Color(0xFF39FF14),
                     fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.Center),
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
                 )
             }
         }
@@ -183,21 +192,21 @@ fun TrainRow(train: TrainSchedule) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 12.dp),
+            .padding(vertical = 18.dp, horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = train.destination.uppercase(),
             modifier = Modifier.weight(2.3f),
-            color = Color(0xFF00FF00), // Neon Green
-            fontSize = 16.sp,
+            color = Color(0xFF39FF14), // Neon Green
+            fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace
         )
         Text(
             text = train.platform.toString(),
             modifier = Modifier.weight(1f),
-            color = Color.Yellow,
+            color = Color(0xFFFFD700), // Gold
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
@@ -206,7 +215,7 @@ fun TrainRow(train: TrainSchedule) {
         Text(
             text = train.departureTime,
             modifier = Modifier.weight(1.2f),
-            color = Color(0xFF00FF00), // Neon Green
+            color = Color(0xFF39FF14), // Neon Green
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
