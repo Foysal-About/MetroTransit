@@ -1,6 +1,10 @@
 package com.example.metrotransit.ui.screens
 
 import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +25,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,12 +34,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.*
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.nfc.NfcManager
 import com.example.metrotransit.viewmodel.HomeViewModel
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,9 +55,40 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
     val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
+    val activity = context as Activity
+    val nfcManager = remember { NfcManager(activity) }
+    
+    val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val context = LocalContext.current as Activity
-    val nfcManager = remember { NfcManager(context) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        ) {
+            viewModel.isLocating = true
+        }
+    }
+
+    if (viewModel.isLocating) {
+        LaunchedEffect(Unit) {
+            try {
+                // Check if we have permission before calling lastLocation
+                if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    val location = locationClient.lastLocation.await()
+                    if (location != null) {
+                        viewModel.findNearestStation(location.latitude, location.longitude)
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error
+            } finally {
+                viewModel.isLocating = false
+            }
+        }
+    }
 
     if (viewModel.showScanSheet) {
         DisposableEffect(Unit) {
@@ -164,8 +203,37 @@ fun HomeScreen(
                             StationSelector(
                                 label = "From Station",
                                 selectedStation = viewModel.fromStation,
-                                onStationSelected = { viewModel.setFrom(it) }
+                                onStationSelected = { viewModel.setFrom(it) },
+                                modifier = Modifier.weight(1f)
                             )
+                            
+                            IconButton(
+                                onClick = {
+                                    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                        viewModel.isLocating = true
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(
+                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        ))
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                if (viewModel.isLocating) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Icon(
+                                        Icons.Default.MyLocation,
+                                        contentDescription = "Find Nearest",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
                         }
 
                         Row(
@@ -588,14 +656,15 @@ fun JourneyPoint(icon: ImageVector, color: Color) {
 fun StationSelector(
     label: String,
     selectedStation: MetroStation?,
-    onStationSelected: (MetroStation) -> Unit
+    onStationSelected: (MetroStation) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
     ) {
         TextField(
             value = selectedStation?.name ?: "",

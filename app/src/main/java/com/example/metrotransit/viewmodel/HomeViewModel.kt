@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.nfc.NfcCardParser
+import kotlin.math.*
 
 private const val TAG = "MRT_NFC"
 
@@ -28,6 +29,7 @@ class HomeViewModel : ViewModel() {
     var isScanning         by mutableStateOf(false)
     var scanError          by mutableStateOf<String?>(null)
     var showScanSheet      by mutableStateOf(false)
+    var isLocating         by mutableStateOf(false)
 
     fun processNfcResponse(response: ByteArray) {
         try {
@@ -119,5 +121,33 @@ class HomeViewModel : ViewModel() {
     fun setTo(station: MetroStation)   { toStation   = station }
     fun swapStations() {
         val tmp = fromStation; fromStation = toStation; toStation = tmp
+    }
+
+    fun findNearestStation(lat: Double, lon: Double) {
+        var nearestStation: MetroStation? = null
+        var minDistance = Double.MAX_VALUE
+
+        for (station in StationData.stations) {
+            val distance = calculateDistance(lat, lon, station.latitude, station.longitude)
+            if (distance < minDistance) {
+                minDistance = distance
+                nearestStation = station
+            }
+        }
+
+        if (nearestStation != null) {
+            fromStation = nearestStation
+        }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371 // Radius of the earth in km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = sin(dLat / 2) * sin(dLat / 2) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLon / 2) * sin(dLon / 2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return r * c
     }
 }
