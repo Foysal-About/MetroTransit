@@ -14,8 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,134 +43,187 @@ fun UpdatePasswordScreen(
     val scrollState = rememberScrollState()
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Column(verticalArrangement = Arrangement.Center) {
-                            Text(
-                                text = "Update Password",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = "Update Your Password",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "Update Password", 
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF1E293B)
+                        )
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        if (!isBackTriggered) {
+                            isBackTriggered = true
+                            onBack()
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            if (!isBackTriggered) {
-                                isBackTriggered = true
-                                onBack()
-                            }
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-                )
-                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
-            }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1E293B))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color.White)
-                .verticalScroll(scrollState)
-                .padding(20.dp),
-            horizontalAlignment = Alignment.Start
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF1F5F9),
+                            Color(0xFFE2E8F0),
+                            Color(0xFFCBD5E1)
+                        )
+                    )
+                )
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Current Password
-            LabelWithAsterisk("Current Password")
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = currentPassword,
-                onValueChange = { currentPassword = it },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
-                visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
-                        Icon(if (currentPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // New Password
-            LabelWithAsterisk("New Password")
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = newPassword,
-                onValueChange = { newPassword = it },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
-                visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
-                        Icon(if (newPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Confirm New Password
-            LabelWithAsterisk("Confirm New Password")
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
-                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                        Icon(if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Password Requirement Notice
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Red)) {
-                        append("***")
-                    }
-                    withStyle(style = SpanStyle(color = Color(0xFF00ACC1), fontSize = 12.sp)) {
-                        append("Password must be at least 8 characters with uppercase, lowercase letters, numbers, and symbols.")
-                    }
-                },
-                lineHeight = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Update Button
-            Button(
-                onClick = onUpdateSuccess,
+            Column(
                 modifier = Modifier
-                    .width(120.dp)
-                    .height(48.dp),
-                shape = RoundedCornerShape(4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("UPDATE", fontWeight = FontWeight.Bold, color = Color.White)
+                // Form Container (Glass Surface)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White.copy(alpha = 0.6f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        PasswordInputField(
+                            label = "Current Password",
+                            value = currentPassword,
+                            onValueChange = { currentPassword = it },
+                            isVisible = currentPasswordVisible,
+                            onToggleVisibility = { currentPasswordVisible = !currentPasswordVisible }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        PasswordInputField(
+                            label = "New Password",
+                            value = newPassword,
+                            onValueChange = { newPassword = it },
+                            isVisible = newPasswordVisible,
+                            onToggleVisibility = { newPasswordVisible = !newPasswordVisible }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        PasswordInputField(
+                            label = "Confirm New Password",
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            isVisible = confirmPasswordVisible,
+                            onToggleVisibility = { confirmPasswordVisible = !confirmPasswordVisible }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Password Requirement Notice
+                        Surface(
+                            color = Color(0xFF3269B5).copy(alpha = 0.05f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack, // Just a placeholder icon for info
+                                    contentDescription = null,
+                                    tint = Color(0xFF3269B5),
+                                    modifier = Modifier.size(14.dp).offset(y = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Password must be at least 8 characters with uppercase, lowercase letters, numbers, and symbols.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF64748B),
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                // Update Button
+                Button(
+                    onClick = onUpdateSuccess,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(Color(0xFF3269B5), Color(0xFF5A67D8))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Update Password",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+@Composable
+fun PasswordInputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    isVisible: Boolean,
+    onToggleVisibility: () -> Unit
+) {
+    Column {
+        LabelWithAsterisk(label)
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = onToggleVisibility) {
+                    Icon(if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null, tint = Color(0xFF64748B))
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                focusedBorderColor = Color(0xFF3269B5),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.3f),
+                focusedContainerColor = Color.White.copy(alpha = 0.3f)
+            ),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+        )
     }
 }

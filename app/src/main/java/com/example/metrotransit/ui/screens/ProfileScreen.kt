@@ -3,14 +3,19 @@ package com.example.metrotransit.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,13 +28,21 @@ fun ProfileScreen(
     onUpdateProfile: () -> Unit,
     onUpdatePassword: () -> Unit
 ) {
-    val cyanColor = Color(0xFF00ACC1)
     var isBackTriggered by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("MRT Portal", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "MRT Portal", 
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF1E293B)
+                        )
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (!isBackTriggered) {
@@ -37,111 +50,128 @@ fun ProfileScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1E293B))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Profile Image Placeholder
-            Surface(
-                modifier = Modifier.size(140.dp),
-                shape = CircleShape,
-                color = Color(0xFF1976D2) // Standard blue for profile icon
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(90.dp),
-                        tint = Color.White
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF1F5F9),
+                            Color(0xFFE2E8F0),
+                            Color(0xFFCBD5E1)
+                        )
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Name
-            Text(
-                text = "Syed Foysal",
-                fontSize = 18.sp,
-                color = Color.Gray,
-                fontWeight = FontWeight.Normal
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 40.dp), thickness = 0.5.dp, color = Color.LightGray)
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Phone Number
-            Text(
-                text = "01876069132",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = cyanColor
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Email with verified badge
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "foysalislam76@gmail.com",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = cyanColor
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    Icons.Default.CheckCircle,
-                    contentDescription = "Verified",
-                    tint = cyanColor,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 40.dp), thickness = 0.5.dp, color = Color.LightGray)
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Menu Items
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 60.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .fillMaxSize()
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                ProfileMenuItem(
-                    icon = Icons.Default.Person,
-                    label = "Update Profile",
-                    iconColor = cyanColor,
-                    onClick = onUpdateProfile
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.Lock,
-                    label = "Update Password",
-                    iconColor = cyanColor,
-                    onClick = onUpdatePassword
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.PowerSettingsNew,
-                    label = "Sign Out",
-                    iconColor = cyanColor,
-                    onClick = onLogout
-                )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Profile Header Card (Glass)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White.copy(alpha = 0.6f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(100.dp),
+                            shape = CircleShape,
+                            color = Color(0xFF3269B5).copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(60.dp),
+                                    tint = Color(0xFF3269B5)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Syed Foysal",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B)
+                        )
+                        
+                        Text(
+                            text = "foysalislam76@gmail.com",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF64748B)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Surface(
+                            color = Color(0xFF10B981).copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(100.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF10B981), modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Verified", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Menu Section (Glass)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White.copy(alpha = 0.6f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                ) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        ProfileMenuItem(
+                            icon = Icons.Default.AccountCircle,
+                            label = "Update Profile",
+                            onClick = onUpdateProfile
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.3f))
+                        ProfileMenuItem(
+                            icon = Icons.Default.Lock,
+                            label = "Change Password",
+                            onClick = onUpdatePassword
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.3f))
+                        ProfileMenuItem(
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            label = "Sign Out",
+                            isDestructive = true,
+                            onClick = onLogout
+                        )
+                    }
+                }
             }
         }
     }
@@ -149,32 +179,50 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileMenuItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
-    iconColor: Color,
+    isDestructive: Boolean = false,
     onClick: () -> Unit
 ) {
-    TextButton(
+    Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(0.dp)
+        color = Color.Transparent,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.width(20.dp))
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = (if (isDestructive) Color(0xFFEF4444) else Color(0xFF3269B5)).copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = if (isDestructive) Color(0xFFEF4444) else Color(0xFF3269B5),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = label,
-                fontSize = 18.sp,
-                color = Color.Gray,
-                fontWeight = FontWeight.Normal
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isDestructive) Color(0xFFEF4444) else Color(0xFF1E293B)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(20.dp)
             )
         }
     }
