@@ -15,12 +15,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.MRTPassCard
 import com.example.metrotransit.viewmodel.MRTPassViewModel
-import kotlinx.coroutines.launch
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +36,6 @@ fun MRTPassRechargeScreen(
     viewModel: MRTPassViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
     // Guard to prevent multiple back navigation on double tap
@@ -51,7 +47,7 @@ fun MRTPassRechargeScreen(
     var selectedAmountStr by remember { mutableStateOf("100") }
     
     val amountDouble = selectedAmountStr.replace(",", "").toDoubleOrNull() ?: 0.0
-    val gatewayFee = amountDouble * 0.0083 // 0.83% fee as seen in screenshot (0.83 for 100)
+    val gatewayFee = amountDouble * 0.0083 
     val totalAmount = amountDouble + gatewayFee
 
     Scaffold(
@@ -104,8 +100,7 @@ fun MRTPassRechargeScreen(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Reusing the visual from dashboard (Simplified version here)
-                    PhysicalCardVisual(type = selectedCard.type)
+                    PhysicalCardVisual()
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -243,7 +238,6 @@ fun MRTPassRechargeScreen(
                 color = Color.Gray
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // Placeholder for the long list of payment logos
             Box(
                 modifier = Modifier.fillMaxWidth().height(60.dp).background(Color(0xFFF9F9F9), RoundedCornerShape(4.dp)),
                 contentAlignment = Alignment.Center

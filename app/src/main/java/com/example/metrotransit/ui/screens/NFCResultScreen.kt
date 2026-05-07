@@ -136,7 +136,7 @@ fun NFCResultScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
                         Text(
-                            "MRT / Rapid Pass",
+                            "MRT Pass Details",
                             modifier = Modifier.align(Alignment.Center),
                             color = Color.Black,
                             fontWeight = FontWeight.Bold,

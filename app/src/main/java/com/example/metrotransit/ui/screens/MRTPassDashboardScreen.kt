@@ -93,7 +93,7 @@ fun MRTPassDashboardScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Drawer Items with better styling
+                // Drawer Items
                 val itemModifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 4.dp)
                     .height(56.dp)
@@ -158,8 +158,7 @@ fun MRTPassDashboardScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
-    )
-{
+    ) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -305,7 +304,7 @@ fun EnhancedCardItem(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Physical Card Visual Simulation
-            PhysicalCardVisual(type = card.type)
+            PhysicalCardVisual()
             
             Spacer(modifier = Modifier.height(20.dp))
             

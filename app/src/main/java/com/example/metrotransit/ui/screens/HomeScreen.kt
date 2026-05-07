@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +61,12 @@ fun HomeScreen(
     val activity = context as Activity
     val nfcManager = remember { NfcManager(activity) }
     
+    var rotationAngle by remember { mutableStateOf(0f) }
+    val animatedRotation by animateFloatAsState(
+        targetValue = rotationAngle,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium)
+    )
+
     val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -274,7 +281,10 @@ fun HomeScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 IconButton(
-                                    onClick = { viewModel.swapStations() },
+                                    onClick = { 
+                                        viewModel.swapStations()
+                                        rotationAngle += 180f
+                                    },
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(CircleShape)
@@ -284,7 +294,9 @@ fun HomeScreen(
                                     Icon(
                                         Icons.Default.SwapVert,
                                         contentDescription = "Swap",
-                                        modifier = Modifier.size(20.dp),
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .graphicsLayer { rotationZ = animatedRotation },
                                         tint = Color(0xFF3269B5)
                                     )
                                 }
