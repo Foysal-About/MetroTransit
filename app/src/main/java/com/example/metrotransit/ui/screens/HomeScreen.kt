@@ -53,6 +53,7 @@ fun HomeScreen(
     onViewStations: () -> Unit,
     onNavigateToMRTPass: () -> Unit,
     onNavigateToNFCResult: () -> Unit,
+    onNavigateToFareCalculator: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
@@ -524,6 +525,63 @@ fun HomeScreen(
                             Icon(Icons.Default.Contactless, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text("Tap Card to Scan", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // ── Fare Calculator card (Glass Effect) ──────────────────────
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White.copy(alpha = 0.6f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                    onClick = onNavigateToFareCalculator
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color(0xFF3269B5).copy(alpha = 0.1f),
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Calculate,
+                                    contentDescription = null,
+                                    tint = Color(0xFF3269B5),
+                                    modifier = Modifier.padding(14.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    "Fare Calculator",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1E293B)
+                                )
+                                Text(
+                                    "Check timetable & journey fare",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Button(
+                            onClick = onNavigateToFareCalculator,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3269B5))
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Check Schedule & Fare", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

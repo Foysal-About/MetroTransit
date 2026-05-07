@@ -38,6 +38,7 @@ sealed class Screen(val route: String) {
         fun createRoute(amount: String) = "nagad_payment/$amount"
     }
     object MRTPassWebView : Screen("mrtpass_webview")
+    object FareCalculator : Screen("fare_calculator")
     object NFCResult : Screen("nfc_result")
     object PaymentGateway : Screen("payment_gateway/{amount}") {
         fun createRoute(amount: String) = "payment_gateway/$amount"
@@ -77,8 +78,15 @@ fun NavGraph(
                 onNavigateToNFCResult = {
                     navController.navigate(Screen.NFCResult.route)
                 },
+                onNavigateToFareCalculator = {
+                    navController.navigate(Screen.FareCalculator.route)
+                },
                 viewModel = homeViewModel
             )
+        }
+
+        composable(Screen.FareCalculator.route) {
+            FareCalculatorScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.NFCResult.route) {
