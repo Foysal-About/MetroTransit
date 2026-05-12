@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,157 +35,126 @@ fun CardPaymentScreen(
     var cvv by remember { mutableStateOf("") }
     var cardName by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
+    
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("Credit/Debit Card", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) },
+            CenterAlignedTopAppBar(
+                title = { Text("Credit/Debit Card", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = extendedColors.textPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         bottomBar = {
-            Column {
-                CardSummaryBottomBar(amount)
-                Button(
-                    onClick = { isProcessing = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF36F21)),
-                    enabled = cardNumber.length >= 16 && expiry.length >= 4 && cvv.length >= 3 && !isProcessing
-                ) {
-                    if (isProcessing) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("Pay Now", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Surface(
+                color = extendedColors.surface,
+                shadowElevation = 16.dp,
+                tonalElevation = 8.dp,
+                border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+            ) {
+                Column(modifier = Modifier.navigationBarsPadding().padding(20.dp)) {
+                    CardSummaryBottomBar(amount)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { isProcessing = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = cardNumber.length >= 16 && expiry.length >= 4 && cvv.length >= 3 && !isProcessing
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("PAY ৳$amount", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF1F2F6))
-                .verticalScroll(rememberScrollState())
+                .background(extendedColors.backgroundGradient)
         ) {
-            // Voucher Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFE6F0FF))
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = null,
-                        tint = Color(0xFF005DC0),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Collect payment voucher & get extra savings on your purchase!",
-                        color = Color(0xFF005DC0),
-                        fontSize = 11.sp
-                    )
-                }
-            }
-
-            // Protection Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFE8F5E9))
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = Color(0xFF2E7D32),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Covered by MetroTransit Payment Protection",
-                        color = Color(0xFF2E7D32),
-                        fontSize = 11.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Card Form
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
             ) {
-                // Logos
-                Row(
+                // Info Banner
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
-                    Text("\uD83D\uDCB3", fontSize = 18.sp) // American Express placeholder
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("\uD83D\uDCB3", fontSize = 18.sp) // Mastercard placeholder
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("\uD83D\uDCB3", fontSize = 18.sp) // Visa placeholder
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Secure 256-bit SSL Encrypted Payment", color = extendedColors.textPrimary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    }
                 }
 
-                CardTextField(
-                    value = cardNumber,
-                    onValueChange = { if (it.length <= 16) cardNumber = it },
-                    label = "Card number",
-                    keyboardType = KeyboardType.Number
-                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CardTextField(
-                        value = expiry,
-                        onValueChange = { if (it.length <= 4) expiry = it },
-                        label = "Expiry (MM/YY)",
-                        modifier = Modifier.weight(1f),
-                        showHelp = true,
-                        keyboardType = KeyboardType.Number
-                    )
-                    CardTextField(
-                        value = cvv,
-                        onValueChange = { if (it.length <= 4) cvv = it },
-                        label = "CVV",
-                        modifier = Modifier.weight(1f),
-                        showHelp = true,
-                        keyboardType = KeyboardType.Number
-                    )
+                // Card Form
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                ) {
+                    Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        CardTextField(
+                            value = cardNumber,
+                            onValueChange = { if (it.length <= 16) cardNumber = it },
+                            label = "Card Number",
+                            keyboardType = KeyboardType.Number
+                        )
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            CardTextField(
+                                value = expiry,
+                                onValueChange = { if (it.length <= 4) expiry = it },
+                                label = "MM/YY",
+                                modifier = Modifier.weight(1f),
+                                keyboardType = KeyboardType.Number
+                            )
+                            CardTextField(
+                                value = cvv,
+                                onValueChange = { if (it.length <= 4) cvv = it },
+                                label = "CVV",
+                                modifier = Modifier.weight(1f),
+                                keyboardType = KeyboardType.Number
+                            )
+                        }
+
+                        CardTextField(
+                            value = cardName,
+                            onValueChange = { cardName = it },
+                            label = "Cardholder Name"
+                        )
+
+                        Text(
+                            text = "Your card details are protected by MetroTransit Payment Protection. We do not store your CVV.",
+                            color = extendedColors.textSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 16.sp
+                        )
+                    }
                 }
-
-                CardTextField(
-                    value = cardName,
-                    onValueChange = { cardName = it },
-                    label = "Name on card",
-                    showHelp = true
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "We will save this card for your convenience. If required, you can remove the card in the \"Payment Options\" section in the \"Account\" menu.",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp
-                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -204,67 +174,44 @@ fun CardTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
-    showHelp: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        placeholder = { Text(label, color = Color.LightGray, fontSize = 14.sp) },
-        trailingIcon = {
-            if (showHelp) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.HelpOutline,
-                    contentDescription = null,
-                    tint = Color.LightGray,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
-        shape = RoundedCornerShape(2.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = Color(0xFFE0E0E0),
-            focusedBorderColor = Color(0xFFF36F21),
-            unfocusedContainerColor = Color.White,
-            focusedContainerColor = Color.White
+    val extendedColors = MetroTransitTheme.extendedColors
+    Column(modifier = modifier) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = extendedColors.textSecondary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = extendedColors.glassBorder,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = Color.Black.copy(alpha = 0.05f),
+                focusedContainerColor = Color.Black.copy(alpha = 0.05f),
+                unfocusedTextColor = extendedColors.textPrimary,
+                focusedTextColor = extendedColors.textPrimary
+            )
         )
-    )
+    }
 }
 
 @Composable
 fun CardSummaryBottomBar(amount: String) {
-    Surface(
-        color = Color.White,
-        shadowElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
+    val extendedColors = MetroTransitTheme.extendedColors
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
-                Text("\u09f3 $amount", fontSize = 14.sp)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Total Amount", fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                Text(
-                    "\u09f3 $amount",
-                    color = Color(0xFFF36F21),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-        }
+        Text("Amount to Pay", style = MaterialTheme.typography.bodyMedium, color = extendedColors.textSecondary)
+        Text(
+            "৳ $amount",
+            color = extendedColors.textPrimary,
+            fontWeight = FontWeight.Black,
+            fontSize = 20.sp
+        )
     }
 }

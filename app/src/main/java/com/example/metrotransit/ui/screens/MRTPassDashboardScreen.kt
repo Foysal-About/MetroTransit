@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.MRTPassCard
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -37,6 +38,7 @@ fun MRTPassDashboardScreen(
     val cards by viewModel.cards.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val extendedColors = MetroTransitTheme.extendedColors
 
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
@@ -47,7 +49,7 @@ fun MRTPassDashboardScreen(
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(320.dp),
-                drawerContainerColor = Color(0xFFF1F5F9),
+                drawerContainerColor = extendedColors.surface,
                 drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp)
             ) {
                 // Drawer Header with Gradient
@@ -56,7 +58,7 @@ fun MRTPassDashboardScreen(
                         .fillMaxWidth()
                         .background(
                             Brush.verticalGradient(
-                                listOf(Color(0xFF3269B5), Color(0xFF1E3A8A))
+                                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
                             )
                         )
                         .padding(top = 60.dp, bottom = 30.dp, start = 24.dp, end = 24.dp)
@@ -99,16 +101,16 @@ fun MRTPassDashboardScreen(
                     .height(56.dp)
 
                 NavigationDrawerItem(
-                    label = { Text("My Cards", fontWeight = FontWeight.Medium) },
+                    label = { Text("My Cards", fontWeight = FontWeight.Medium, color = extendedColors.textPrimary) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Default.CreditCard, contentDescription = null) },
+                    icon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = extendedColors.textSecondary) },
                     modifier = itemModifier,
                     shape = RoundedCornerShape(16.dp),
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
-                    label = { Text("Recharge History", fontWeight = FontWeight.Medium) },
+                    label = { Text("Recharge History", fontWeight = FontWeight.Medium, color = extendedColors.textPrimary) },
                     selected = false,
                     onClick = { 
                         scope.launch { 
@@ -116,13 +118,13 @@ fun MRTPassDashboardScreen(
                             onShowHistory()
                         } 
                     },
-                    icon = { Icon(Icons.Default.History, contentDescription = null) },
+                    icon = { Icon(Icons.Default.History, contentDescription = null, tint = extendedColors.textSecondary) },
                     modifier = itemModifier,
                     shape = RoundedCornerShape(16.dp),
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 NavigationDrawerItem(
-                    label = { Text("MRT Portal", fontWeight = FontWeight.Medium) },
+                    label = { Text("MRT Portal", fontWeight = FontWeight.Medium, color = extendedColors.textPrimary) },
                     selected = false,
                     onClick = { 
                         scope.launch { 
@@ -130,7 +132,7 @@ fun MRTPassDashboardScreen(
                             onShowProfile()
                         } 
                     },
-                    icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
+                    icon = { Icon(Icons.Default.AccountBox, contentDescription = null, tint = extendedColors.textSecondary) },
                     modifier = itemModifier,
                     shape = RoundedCornerShape(16.dp),
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
@@ -138,10 +140,10 @@ fun MRTPassDashboardScreen(
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = Color.LightGray.copy(alpha = 0.5f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = extendedColors.textSecondary.copy(alpha = 0.2f))
                 
                 NavigationDrawerItem(
-                    label = { Text("Sign Out", fontWeight = FontWeight.Bold) },
+                    label = { Text("Sign Out", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
                     selected = false,
                     onClick = { 
                         scope.launch { 
@@ -149,7 +151,7 @@ fun MRTPassDashboardScreen(
                             onLogout()
                         } 
                     },
-                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                     modifier = itemModifier,
                     shape = RoundedCornerShape(16.dp),
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
@@ -168,18 +170,18 @@ fun MRTPassDashboardScreen(
                             "My Dashboard",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color(0xFF1E293B))
+                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = extendedColors.textPrimary)
                         }
                     },
                     actions = {
                         Surface(
                             onClick = { /* Toggle Language */ },
-                            color = Color(0xFFE2E8F0).copy(alpha = 0.5f),
+                            color = extendedColors.textSecondary.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(end = 8.dp)
                         ) {
@@ -188,14 +190,14 @@ fun MRTPassDashboardScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text("\uD83C\uDF10 ", fontSize = 14.sp)
-                                Text("\u09ac\u09be\u0982\u09b2\u09be", color = Color(0xFF3269B5), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("\u09ac\u09be\u0982\u09b2\u09be", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
                         }
                         IconButton(onClick = onShowProfile) {
                             Icon(
                                 Icons.Default.AccountCircle,
                                 contentDescription = "Profile",
-                                tint = Color(0xFF3269B5),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(36.dp)
                             )
                         }
@@ -207,15 +209,7 @@ fun MRTPassDashboardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFFF1F5F9),
-                                Color(0xFFE2E8F0),
-                                Color(0xFFCBD5E1)
-                            )
-                        )
-                    )
+                    .background(extendedColors.backgroundGradient)
             ) {
                 Column(
                     modifier = Modifier
@@ -228,7 +222,7 @@ fun MRTPassDashboardScreen(
                     ) {
                         item {
                             Surface(
-                                color = Color(0xFF3269B5).copy(alpha = 0.1f),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -239,14 +233,14 @@ fun MRTPassDashboardScreen(
                                     Icon(
                                         Icons.Default.Info,
                                         contentDescription = null,
-                                        tint = Color(0xFF3269B5),
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "A maximum of five cards can be registered from each account.",
                                         fontSize = 12.sp,
-                                        color = Color(0xFF475569),
+                                        color = extendedColors.textSecondary,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
@@ -268,10 +262,10 @@ fun MRTPassDashboardScreen(
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White.copy(alpha = 0.5f),
-                                    contentColor = Color(0xFF64748B)
+                                    containerColor = extendedColors.glass,
+                                    contentColor = extendedColors.textSecondary
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                                border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -294,32 +288,33 @@ fun EnhancedCardItem(
     onSeeDetails: () -> Unit,
     onRecharge: () -> Unit
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        color = Color.White.copy(alpha = 0.6f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+        color = extendedColors.glass,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
         shadowElevation = 0.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Physical Card Visual Simulation
-            PhysicalCardVisual()
+            PhysicalCardVisual(type = card.type)
             
             Spacer(modifier = Modifier.height(20.dp))
             
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                    .background(extendedColors.textSecondary.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                     .padding(16.dp)
             ) {
                 DetailLine("Name", card.cardName, isBoldValue = true)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.5f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = extendedColors.glassBorder)
                 DetailLine("Card Number", card.cardNumber)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.5f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = extendedColors.glassBorder)
                 DetailLine("Card Status", card.status)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.5f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = extendedColors.glassBorder)
                 DetailLine("Balance", "\u09f3 ${String.format(Locale.US, "%.2f", card.balance)}")
             }
             
@@ -332,12 +327,12 @@ fun EnhancedCardItem(
             ) {
                 Text(
                     text = "Transaction History",
-                    color = Color(0xFF3269B5),
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { onSeeDetails() }
                 )
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF3269B5))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -356,7 +351,7 @@ fun EnhancedCardItem(
                         .fillMaxSize()
                         .background(
                             Brush.horizontalGradient(
-                                listOf(Color(0xFF3269B5), Color(0xFF5A67D8))
+                                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -370,16 +365,17 @@ fun EnhancedCardItem(
 
 @Composable
 fun DetailLine(label: String, value: String, isBoldValue: Boolean = false) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, fontSize = 14.sp, color = Color(0xFF64748B))
+        Text(text = label, fontSize = 14.sp, color = extendedColors.textSecondary)
         Text(
             text = value, 
             fontSize = 14.sp,
             fontWeight = if (isBoldValue) FontWeight.Bold else FontWeight.SemiBold,
-            color = Color(0xFF1E293B)
+            color = extendedColors.textPrimary
         )
     }
 }

@@ -12,13 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +28,7 @@ fun ProfileScreen(
     onUpdatePassword: () -> Unit
 ) {
     var isBackTriggered by remember { mutableStateOf(false) }
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -39,7 +39,7 @@ fun ProfileScreen(
                         "MRT Portal", 
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                     ) 
                 },
@@ -50,7 +50,7 @@ fun ProfileScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1E293B))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -60,15 +60,7 @@ fun ProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F5F9),
-                            Color(0xFFE2E8F0),
-                            Color(0xFFCBD5E1)
-                        )
-                    )
-                )
+                .background(extendedColors.backgroundGradient)
         ) {
             Column(
                 modifier = Modifier
@@ -84,8 +76,8 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
@@ -94,15 +86,15 @@ fun ProfileScreen(
                         Surface(
                             modifier = Modifier.size(100.dp),
                             shape = CircleShape,
-                            color = Color(0xFF3269B5).copy(alpha = 0.1f),
-                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White)
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f))
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.Person,
                                     contentDescription = null,
                                     modifier = Modifier.size(60.dp),
-                                    tint = Color(0xFF3269B5)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -113,13 +105,13 @@ fun ProfileScreen(
                             text = "Syed Foysal",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                         
                         Text(
                             text = "foysalislam76@gmail.com",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF64748B)
+                            color = extendedColors.textSecondary
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -148,8 +140,8 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         ProfileMenuItem(
@@ -157,13 +149,13 @@ fun ProfileScreen(
                             label = "Update Profile",
                             onClick = onUpdateProfile
                         )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.3f))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = extendedColors.glassBorder)
                         ProfileMenuItem(
                             icon = Icons.Default.Lock,
                             label = "Change Password",
                             onClick = onUpdatePassword
                         )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.3f))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = extendedColors.glassBorder)
                         ProfileMenuItem(
                             icon = Icons.AutoMirrored.Filled.Logout,
                             label = "Sign Out",
@@ -184,6 +176,7 @@ fun ProfileMenuItem(
     isDestructive: Boolean = false,
     onClick: () -> Unit
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Surface(
         onClick = onClick,
         color = Color.Transparent,
@@ -199,13 +192,13 @@ fun ProfileMenuItem(
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = (if (isDestructive) Color(0xFFEF4444) else Color(0xFF3269B5)).copy(alpha = 0.1f)
+                color = (if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary).copy(alpha = 0.1f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         icon,
                         contentDescription = null,
-                        tint = if (isDestructive) Color(0xFFEF4444) else Color(0xFF3269B5),
+                        tint = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -215,13 +208,13 @@ fun ProfileMenuItem(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDestructive) Color(0xFFEF4444) else Color(0xFF1E293B)
+                color = if (isDestructive) MaterialTheme.colorScheme.error else extendedColors.textPrimary
             )
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color(0xFF94A3B8),
+                tint = extendedColors.textSecondary,
                 modifier = Modifier.size(20.dp)
             )
         }

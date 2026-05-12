@@ -30,6 +30,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +44,7 @@ fun UpdateProfileScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     
     val scrollState = rememberScrollState()
+    val extendedColors = MetroTransitTheme.extendedColors
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -59,13 +61,13 @@ fun UpdateProfileScreen(
                         "Update Profile", 
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                     ) 
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1E293B))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -75,15 +77,7 @@ fun UpdateProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F5F9),
-                            Color(0xFFE2E8F0),
-                            Color(0xFFCBD5E1)
-                        )
-                    )
-                )
+                .background(extendedColors.backgroundGradient)
         ) {
             Column(
                 modifier = Modifier
@@ -98,8 +92,8 @@ fun UpdateProfileScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.6f))
-                        .border(2.dp, Color.White, CircleShape),
+                        .background(extendedColors.glass)
+                        .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     if (selectedImageUri != null) {
@@ -114,7 +108,7 @@ fun UpdateProfileScreen(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(60.dp),
-                            tint = Color(0xFF3269B5).copy(alpha = 0.6f)
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                         )
                     }
                     
@@ -126,7 +120,7 @@ fun UpdateProfileScreen(
                             .size(36.dp)
                             .offset(x = (-4).dp, y = (-4).dp),
                         shape = CircleShape,
-                        color = Color(0xFF3269B5),
+                        color = MaterialTheme.colorScheme.primary,
                         tonalElevation = 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -146,8 +140,8 @@ fun UpdateProfileScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         ProfileInputField(
@@ -194,8 +188,8 @@ fun UpdateProfileScreen(
                                 shape = RoundedCornerShape(16.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = Color.Transparent,
-                                    disabledTextColor = Color(0xFF64748B),
-                                    disabledContainerColor = Color.White.copy(alpha = 0.3f)
+                                    disabledTextColor = extendedColors.textSecondary,
+                                    disabledContainerColor = Color.Black.copy(alpha = 0.05f)
                                 ),
                                 textStyle = MaterialTheme.typography.bodyLarge
                             )
@@ -220,7 +214,7 @@ fun UpdateProfileScreen(
                             .fillMaxSize()
                             .background(
                                 Brush.horizontalGradient(
-                                    listOf(Color(0xFF3269B5), Color(0xFF5A67D8))
+                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -247,6 +241,7 @@ fun ProfileInputField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Column {
         LabelWithAsterisk(label)
         Spacer(modifier = Modifier.height(8.dp))
@@ -256,10 +251,12 @@ fun ProfileInputField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                focusedBorderColor = Color(0xFF3269B5),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.3f),
-                focusedContainerColor = Color.White.copy(alpha = 0.3f)
+                unfocusedBorderColor = extendedColors.glassBorder.copy(alpha = 0.3f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+                focusedContainerColor = Color.White.copy(alpha = 0.05f),
+                unfocusedTextColor = extendedColors.textPrimary,
+                focusedTextColor = extendedColors.textPrimary
             ),
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
         )
@@ -268,6 +265,7 @@ fun ProfileInputField(
 
 @Composable
 fun LabelWithAsterisk(label: String) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Text(
         text = buildAnnotatedString {
             append(label)
@@ -277,6 +275,6 @@ fun LabelWithAsterisk(label: String) {
         },
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
-        color = Color(0xFF475569)
+        color = extendedColors.textPrimary
     )
 }

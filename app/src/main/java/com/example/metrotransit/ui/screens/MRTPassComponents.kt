@@ -20,14 +20,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PhysicalCardVisual() {
+fun PhysicalCardVisual(type: String = "MRT") {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(
-                Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF3B82F6)))
+                if (type == "MRT") {
+                    Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF3B82F6)))
+                } else {
+                    Brush.linearGradient(listOf(Color(0xFF065F46), Color(0xFF10B981)))
+                }
             )
             .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     ) {
@@ -46,68 +50,123 @@ fun PhysicalCardVisual() {
                 )
         )
 
-        // MRT Pass Style
-        Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column {
-                    Text(
-                        "MRT Pass",
-                        color = Color.White,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 22.sp
-                    )
-                    Text(
-                        "Dhaka Metro Rail",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                // Chip simulation
-                Box(
-                    modifier = Modifier
-                        .size(40.dp, 30.dp)
-                        .background(
-                            Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B))),
-                            RoundedCornerShape(4.dp)
+        if (type == "MRT") {
+            // MRT Pass Style
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column {
+                        Text(
+                            "MRT Pass",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 22.sp
                         )
-                        .border(0.5.dp, Color.Black.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column {
-                    Text(
-                        "VALID THRU",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "12/30",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        Text(
+                            "Dhaka Metro Rail",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    // Chip simulation
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp, 30.dp)
+                            .background(
+                                Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B))),
+                                RoundedCornerShape(4.dp)
+                            )
+                            .border(0.5.dp, Color.Black.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
                     )
                 }
-                
-                // Contactless Icon
-                Icon(
-                    imageVector = Icons.Default.Wifi,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.size(24.dp).graphicsLayer(rotationZ = 90f)
-                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column {
+                        Text(
+                            "VALID THRU",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "12/30",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    // Contactless Icon
+                    Icon(
+                        imageVector = Icons.Default.Wifi,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(24.dp).graphicsLayer(rotationZ = 90f)
+                    )
+                }
+            }
+        } else {
+            // Rapid Pass Style (Greenish)
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column {
+                        Text(
+                            "Rapid Pass",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 22.sp
+                        )
+                        Text(
+                            "One Card for All Transport",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp, 30.dp)
+                            .background(
+                                Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B))),
+                                RoundedCornerShape(4.dp)
+                            )
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        "METRO TRANSIT",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp
+                    )
+                    
+                    Text(
+                        "\uD83D\uDE86", // Train emoji
+                        fontSize = 32.sp
+                    )
+                }
             }
         }
     }

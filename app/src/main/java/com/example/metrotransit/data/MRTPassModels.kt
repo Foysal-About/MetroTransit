@@ -4,7 +4,8 @@ data class MRTPassCard(
     val cardName: String,
     val cardNumber: String,
     val status: String,
-    val balance: Double
+    val balance: Double,
+    val type: String = "MRT"
 )
 
 data class UserProfile(

@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +43,7 @@ fun UpdatePasswordScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -51,7 +54,7 @@ fun UpdatePasswordScreen(
                         "Update Password", 
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                     ) 
                 },
@@ -62,7 +65,7 @@ fun UpdatePasswordScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1E293B))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -72,15 +75,7 @@ fun UpdatePasswordScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F5F9),
-                            Color(0xFFE2E8F0),
-                            Color(0xFFCBD5E1)
-                        )
-                    )
-                )
+                .background(extendedColors.backgroundGradient)
         ) {
             Column(
                 modifier = Modifier
@@ -94,8 +89,8 @@ fun UpdatePasswordScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         PasswordInputField(
@@ -130,7 +125,7 @@ fun UpdatePasswordScreen(
 
                         // Password Requirement Notice
                         Surface(
-                            color = Color(0xFF3269B5).copy(alpha = 0.05f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -141,14 +136,14 @@ fun UpdatePasswordScreen(
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack, // Just a placeholder icon for info
                                     contentDescription = null,
-                                    tint = Color(0xFF3269B5),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(14.dp).offset(y = 2.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Password must be at least 8 characters with uppercase, lowercase letters, numbers, and symbols.",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF64748B),
+                                    color = extendedColors.textSecondary,
                                     lineHeight = 16.sp
                                 )
                             }
@@ -173,7 +168,7 @@ fun UpdatePasswordScreen(
                             .fillMaxSize()
                             .background(
                                 Brush.horizontalGradient(
-                                    listOf(Color(0xFF3269B5), Color(0xFF5A67D8))
+                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -202,6 +197,7 @@ fun PasswordInputField(
     isVisible: Boolean,
     onToggleVisibility: () -> Unit
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Column {
         LabelWithAsterisk(label)
         Spacer(modifier = Modifier.height(8.dp))
@@ -213,15 +209,17 @@ fun PasswordInputField(
             visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = onToggleVisibility) {
-                    Icon(if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null, tint = Color(0xFF64748B))
+                    Icon(if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null, tint = extendedColors.textSecondary)
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                focusedBorderColor = Color(0xFF3269B5),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.3f),
-                focusedContainerColor = Color.White.copy(alpha = 0.3f)
+                unfocusedBorderColor = extendedColors.glassBorder.copy(alpha = 0.3f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+                focusedContainerColor = Color.White.copy(alpha = 0.05f),
+                unfocusedTextColor = extendedColors.textPrimary,
+                focusedTextColor = extendedColors.textPrimary
             ),
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
         )

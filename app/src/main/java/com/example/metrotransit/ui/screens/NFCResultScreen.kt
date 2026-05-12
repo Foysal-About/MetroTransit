@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
-import com.example.metrotransit.viewmodel.Transaction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,214 +30,224 @@ fun NFCResultScreen(
     val isScanning   = viewModel.isScanning
     val scanError    = viewModel.scanError
     val scrollState  = rememberScrollState()
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Card Details", fontWeight = FontWeight.Bold) },
+                title = { Text("Card Details", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF121212),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = Color.Transparent
                 )
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFF121212))
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(extendedColors.backgroundGradient)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            // ── Scanning indicator ─────────────────────────────────────────
-            if (isScanning) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                // ── Scanning indicator ─────────────────────────────────────────
+                if (isScanning) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = extendedColors.glass,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF4CAF50))
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Reading card…",
-                            color = Color.LightGray,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-                return@Scaffold
-            }
-
-            // ── Error state ────────────────────────────────────────────────
-            if (scanError != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "⚠️ Scan Failed",
-                            color = Color(0xFFE57373),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            scanError,
-                            color = Color.LightGray,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Button(
-                            onClick = {
-                                viewModel.resetScan()
-                                onBack()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(40.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Try Again", color = Color.White)
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                "Reading card…",
+                                color = extendedColors.textSecondary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                    return@Scaffold
+                }
+
+                // ── Error state ────────────────────────────────────────────────
+                if (scanError != null) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = extendedColors.glass,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "⚠️ Scan Failed",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                scanError,
+                                color = extendedColors.textSecondary,
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.resetScan()
+                                    onBack()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("Try Again", color = Color.White)
+                            }
+                        }
+                    }
+                    return@Scaffold
+                }
+
+                // ── Balance card ───────────────────────────────────────────────
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                "MRT / Rapid Pass",
+                                modifier = Modifier.align(Alignment.Center),
+                                color = extendedColors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                "Rescan",
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .clickable {
+                                        viewModel.resetScan()
+                                        viewModel.showScanSheet = true
+                                        onBack()
+                                    },
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Current Balance",
+                                color = extendedColors.textSecondary,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "৳ ${balance.toInt()}",
+                                color = if (balance < 20) MaterialTheme.colorScheme.error else extendedColors.textPrimary,
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (balance < 20) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    "Balance too low for the next trip. Top up needed.",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
-                return@Scaffold
-            }
 
-            // ── Balance card ───────────────────────────────────────────────
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
-            ) {
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF4CAF50))
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        Text(
-                            "MRT Pass Details",
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        Text(
-                            "Rescan",
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .clickable {
-                                    viewModel.resetScan()
-                                    viewModel.showScanSheet = true
-                                    onBack()
-                                },
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                // ── Recent journeys card ───────────────────────────────────────
+                if (transactions.isNotEmpty()) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = extendedColors.glass,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                     ) {
-                        Text(
-                            "Current Balance",
-                            color = Color.LightGray,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "৳ ${balance.toInt()}",
-                            color = if (balance < 20) Color(0xFFE57373) else Color.White,
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (balance < 20) {
-                            Spacer(modifier = Modifier.height(12.dp))
+                        Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                "Balance too low for the next trip. Top up needed.",
-                                color = Color(0xFFE57373),
-                                style = MaterialTheme.typography.labelSmall,
+                                "Recent Journeys (${transactions.size})",
+                                color = extendedColors.textPrimary,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            transactions.forEach { tx ->
+                                ResultTransactionItem(
+                                    route        = tx.route,
+                                    date         = tx.date,
+                                    amount       = tx.amount,
+                                    balanceAfter = tx.balanceAfter
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = extendedColors.glass,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No trip history found on this card.",
+                                color = extendedColors.textSecondary,
+                                style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Recent journeys card ───────────────────────────────────────
-            if (transactions.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            "Recent Journeys (${transactions.size})",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        transactions.forEach { tx ->
-                            ResultTransactionItem(
-                                route        = tx.route,
-                                date         = tx.date,
-                                amount       = tx.amount,
-                                balanceAfter = tx.balanceAfter
-                            )
-                        }
-                    }
-                }
-            } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2E))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No trip history found on this card.",
-                            color = Color.Gray,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -249,6 +259,7 @@ fun ResultTransactionItem(
     amount: Int,
     balanceAfter: Int
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,30 +270,29 @@ fun ResultTransactionItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 route,
-                color = Color.White,
+                color = extendedColors.textPrimary,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 date,
-                color = Color.Gray,
+                color = extendedColors.textSecondary,
                 style = MaterialTheme.typography.labelSmall
             )
-            // Balance after this trip, shown in muted text
             if (balanceAfter >= 0) {
                 Text(
                     "Balance after: ৳ $balanceAfter",
-                    color = Color.Gray,
+                    color = extendedColors.textSecondary,
                     style = MaterialTheme.typography.labelSmall
                 )
             }
         }
         Text(
             if (amount >= 0) "৳ $amount" else "৳ $amount",
-            color = if (amount >= 0) Color(0xFF81C784) else Color(0xFFE57373),
+            color = if (amount >= 0) Color(0xFF10B981) else MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
     }
-    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
+    HorizontalDivider(color = extendedColors.glassBorder)
 }

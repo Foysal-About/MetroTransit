@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.metrotransit.data.TrainSchedule
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.ResultViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +37,7 @@ fun ResultScreen(
 ) {
     val currentTime by viewModel.currentTime.collectAsState()
     var visible by remember { mutableStateOf(false) }
+    val extendedColors = MetroTransitTheme.extendedColors
 
     LaunchedEffect(fromId, toId) {
         viewModel.initData(fromId, toId)

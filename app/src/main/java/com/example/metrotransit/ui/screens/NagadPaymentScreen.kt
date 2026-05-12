@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.R
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 
 enum class NagadStep {
@@ -50,45 +50,46 @@ fun NagadPaymentScreen(
     var isProcessing by remember { mutableStateOf(false) }
 
     val nagadRed = Color(0xFFD12030)
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
+            .background(Color.Black.copy(alpha = 0.6f)),
         contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(4.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = extendedColors.surface)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Text(
                         text = when(currentStep) {
-                            NagadStep.ACCOUNT_NUMBER -> "Nagad Authorization For\nTokenization: Account"
-                            NagadStep.OTP -> "Nagad Authorization For\nTokenization: OTP"
-                            NagadStep.PIN -> "Nagad Authorization For\nTokenization: PIN"
-                            NagadStep.SUCCESS -> "Authorization Successful"
+                            NagadStep.ACCOUNT_NUMBER -> "Nagad Authorization"
+                            NagadStep.OTP -> "Verification OTP"
+                            NagadStep.PIN -> "Nagad PIN"
+                            NagadStep.SUCCESS -> "Payment Successful"
                         },
                         modifier = Modifier.align(Alignment.Center),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        lineHeight = 18.sp
+                        fontSize = 16.sp,
+                        color = extendedColors.textPrimary
                     )
                     IconButton(
                         onClick = onClose,
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = extendedColors.textSecondary)
                     }
                 }
 
@@ -97,74 +98,35 @@ fun NagadPaymentScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(nagadRed)
-                        .padding(16.dp),
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Language Toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color.White.copy(alpha = 0.2f),
-                            modifier = Modifier.padding(4.dp)
-                        ) {
-                            Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
-                                Text("\u09ac\u09be\u0982", color = Color.White, fontSize = 10.sp)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("|", color = Color.White, fontSize = 10.sp)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Eng", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
                         when(currentStep) {
-                            NagadStep.ACCOUNT_NUMBER -> "Save Your Nagad Account for Future\nPayments"
-                            NagadStep.OTP -> "Verification Code (OTP) sent to\n$accountNumber"
-                            NagadStep.PIN -> "Enter PIN of your Nagad Account"
-                            NagadStep.SUCCESS -> "Payment Successful"
+                            NagadStep.ACCOUNT_NUMBER -> "Pay with Nagad"
+                            NagadStep.OTP -> "Enter OTP sent to $accountNumber"
+                            NagadStep.PIN -> "Enter Nagad PIN"
+                            NagadStep.SUCCESS -> "Success!"
                         },
                         color = Color.White,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Amount to Pay: \u09f3 $amount", color = Color.White, fontSize = 12.sp)
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // MetroTransit Icon & Text
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground), // Placeholder cart/app icon
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Text(
-                        "MetroTransit Limit",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Payable Amount: ৳ $amount", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
 
                     Spacer(modifier = Modifier.height(32.dp))
 
                     when(currentStep) {
                         NagadStep.ACCOUNT_NUMBER -> {
                             Text(
-                                "Your Nagad Account Number",
-                                color = Color.White,
+                                "Nagad Account Number",
+                                color = Color.White.copy(alpha = 0.8f),
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
-                            // Boxed Input Simulation
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -173,14 +135,11 @@ fun NagadPaymentScreen(
                                     val char = if (i < accountNumber.length) accountNumber[i].toString() else ""
                                     Box(
                                         modifier = Modifier
-                                            .size(width = 24.dp, height = 32.dp)
+                                            .size(width = 24.dp, height = 36.dp)
                                             .background(Color.White, RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold)
-                                    }
-                                    if (i == 2 || i == 5 || i == 8) {
-                                        Text("-", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                                     }
                                 }
                             }
@@ -188,12 +147,12 @@ fun NagadPaymentScreen(
                                 value = accountNumber,
                                 onValueChange = { if (it.length <= 11 && it.all { c -> c.isDigit() }) accountNumber = it },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.size(width = 280.dp, height = 32.dp).alpha(0f)
+                                modifier = Modifier.size(width = 280.dp, height = 36.dp).alpha(0f)
                             )
                         }
                         NagadStep.OTP -> {
                             Text(
-                                "Enter 6-Digit Verification Code",
+                                "Enter 6-Digit OTP",
                                 color = Color.White,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 12.dp)
@@ -206,11 +165,11 @@ fun NagadPaymentScreen(
                                     val char = if (i < otp.length) otp[i].toString() else ""
                                     Box(
                                         modifier = Modifier
-                                            .size(width = 32.dp, height = 40.dp)
+                                            .size(36.dp)
                                             .background(Color.White, RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                                     }
                                 }
                             }
@@ -223,7 +182,7 @@ fun NagadPaymentScreen(
                         }
                         NagadStep.PIN -> {
                             Text(
-                                "Enter 4-Digit Nagad PIN",
+                                "Enter 4-Digit PIN",
                                 color = Color.White,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 12.dp)
@@ -233,14 +192,14 @@ fun NagadPaymentScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 for (i in 0 until 4) {
-                                    val char = if (i < pin.length) "\u25CF" else "" // Circle for password
+                                    val char = if (i < pin.length) "●" else ""
                                     Box(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .background(Color.White, RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(char, color = Color.Black, fontSize = 12.sp)
+                                        Text(char, color = Color.Black, fontSize = 16.sp)
                                     }
                                 }
                             }
@@ -253,29 +212,14 @@ fun NagadPaymentScreen(
                             )
                         }
                         NagadStep.SUCCESS -> {
-                             Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null, tint = Color.White, modifier = Modifier.size(64.dp))
+                             Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null, tint = Color.White, modifier = Modifier.size(80.dp))
                              Spacer(modifier = Modifier.height(16.dp))
-                             Text("Success!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                             Text("Payment Successful!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                     }
 
                     if (currentStep != NagadStep.SUCCESS) {
                         Spacer(modifier = Modifier.height(40.dp))
-
-                        Text(
-                            text = buildAnnotatedString {
-                                append("By clicking/tapping \"Proceed\" you are agreeing to our ")
-                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)) {
-                                    append("Terms and Conditions")
-                                }
-                            },
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -290,35 +234,34 @@ fun NagadPaymentScreen(
                                         else -> {}
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                shape = RoundedCornerShape(4.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = nagadRed)
                             ) {
                                 if (isProcessing) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = nagadRed, strokeWidth = 2.dp)
                                 } else {
-                                    Text("Proceed", fontWeight = FontWeight.Bold)
+                                    Text("PROCEED", fontWeight = FontWeight.Bold)
                                 }
                             }
-                            Button(
+                            OutlinedButton(
                                 onClick = onClose,
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                shape = RoundedCornerShape(4.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White)
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                             ) {
-                                Text("Close", fontWeight = FontWeight.Bold)
+                                Text("CANCEL", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    // Nagad Logo
                     Image(
                         painter = painterResource(id = R.drawable.nagad_logo),
                         contentDescription = "Nagad",
-                        modifier = Modifier.height(50.dp)
+                        modifier = Modifier.height(40.dp)
                     )
                 }
             }

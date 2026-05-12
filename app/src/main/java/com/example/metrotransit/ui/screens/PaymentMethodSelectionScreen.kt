@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.PaymentMethod
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,119 +31,139 @@ fun PaymentMethodSelectionScreen(
     onBack: () -> Unit,
     onMethodSelected: (PaymentMethod) -> Unit
 ) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Select Payment Method", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) },
+                title = { Text("Select Payment Method", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = extendedColors.textPrimary) },
                 actions = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = extendedColors.textPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         bottomBar = {
             PaymentSummaryBottomBar(amount)
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF1F2F6))
-                .verticalScroll(rememberScrollState())
+                .background(extendedColors.backgroundGradient)
         ) {
-            // Voucher Banner
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFE6F0FF))
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = Color(0xFF005DC0),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Collect payment voucher & get extra savings on your purchase!",
-                        color = Color(0xFF005DC0),
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Recommended section
-            SectionHeader("Recommended method(s)")
-            PaymentMethodItem(
-                name = "Credit/Debit Card",
-                subtitle = "Credit/Debit Card",
-                showCardLogos = true,
-                onClick = { 
-                    onMethodSelected(PaymentMethod("Card", "Card")) 
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Other methods
-            SectionHeader("Other Payment Methods")
-            
-            val otherMethods = viewModel.paymentMethods.filter { 
-                val name = it.name.lowercase()
-                !name.contains("visa") && 
-                !name.contains("mastercard") && 
-                !name.contains("cash on delivery") && 
-                !name.contains("installment") &&
-                !name.contains("instalment")
-            }
-
-            Column(modifier = Modifier.background(Color.White)) {
-                otherMethods.forEachIndexed { index, method ->
-                    PaymentMethodItem(
-                        name = if (method.name.lowercase() == "bkash") "bKash " else method.name,
-                        iconRes = method.iconRes,
-                        onClick = { onMethodSelected(method) }
-                    )
-                    if (index < otherMethods.size - 1) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(start = 56.dp),
-                            thickness = 0.5.dp,
-                            color = Color(0xFFEEEEEE)
+                // Voucher Banner (Glass variant)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Collect payment voucher & get extra savings on your purchase!",
+                            color = extendedColors.textPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // Footer Logos
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Norton | PCI | Visa | Mastercard", fontSize = 10.sp, color = Color.LightGray)
+                // Recommended section
+                SectionHeader("Recommended method(s)")
+                PaymentMethodItem(
+                    name = "Credit/Debit Card",
+                    subtitle = "Visa, Mastercard, etc.",
+                    showCardLogos = true,
+                    onClick = { 
+                        onMethodSelected(PaymentMethod("Card", "Card")) 
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Other methods
+                SectionHeader("Other Payment Methods")
+                
+                val otherMethods = viewModel.paymentMethods.filter { 
+                    val name = it.name.lowercase()
+                    !name.contains("visa") && 
+                    !name.contains("mastercard")
+                }
+
+                Surface(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                ) {
+                    Column {
+                        otherMethods.forEachIndexed { index, method ->
+                            PaymentMethodItem(
+                                name = if (method.name.lowercase() == "bkash") "bKash " else method.name,
+                                iconRes = method.iconRes,
+                                isInsideContainer = true,
+                                onClick = { onMethodSelected(method) }
+                            )
+                            if (index < otherMethods.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = extendedColors.glassBorder
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Footer Logos
+                Text(
+                    text = "Secure Payments Powered by LEADS",
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontSize = 10.sp,
+                    color = extendedColors.textSecondary,
+                    fontWeight = FontWeight.Bold
+                )
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
 fun SectionHeader(title: String) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Text(
-        text = title,
-        fontSize = 14.sp,
-        color = Color.Gray,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        text = title.uppercase(),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Black,
+        color = extendedColors.textSecondary,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
     )
 }
 
@@ -152,24 +173,20 @@ fun PaymentMethodItem(
     subtitle: String? = null,
     showCardLogos: Boolean = false,
     iconRes: Int? = null,
+    isInsideContainer: Boolean = false,
     onClick: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        color = Color.White
-    ) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    val content = @Composable {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Brand Icon Container
             Box(
-                modifier = Modifier
-                    .size(36.dp),
+                modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (iconRes != null) {
@@ -177,28 +194,27 @@ fun PaymentMethodItem(
                         painter = painterResource(id = iconRes),
                         contentDescription = name,
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 } else {
-                    // Fallback visual using brand colors and emojis/initials
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(10.dp),
                         color = getBrandColor(name).copy(alpha = 0.1f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             val iconText = when {
-                                name.lowercase().contains("bkash") -> "\uD83D\uDD4A" // Bird/Pigeon-ish
-                                name.lowercase().contains("nagad") -> "\uD83D\uDDF3" // Vote/Box-ish
-                                name.lowercase().contains("rocket") -> "\uD83D\uDE80" // Rocket
-                                name.lowercase().contains("card") -> "\uD83D\uDCB3" // Card
+                                name.lowercase().contains("bkash") -> "🐦"
+                                name.lowercase().contains("nagad") -> "📦"
+                                name.lowercase().contains("rocket") -> "🚀"
+                                name.lowercase().contains("card") -> "💳"
                                 else -> name.take(1)
                             }
                             Text(
                                 iconText,
                                 color = getBrandColor(name),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 18.sp
                             )
                         }
                     }
@@ -210,15 +226,15 @@ fun PaymentMethodItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF212121)
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = extendedColors.textPrimary
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extendedColors.textSecondary
                     )
                 }
             }
@@ -228,53 +244,75 @@ fun PaymentMethodItem(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    // Mini card brand indicators
-                    Box(modifier = Modifier.size(20.dp, 14.dp).background(Color(0xFF0056B3), RoundedCornerShape(2.dp)))
-                    Box(modifier = Modifier.size(20.dp, 14.dp).background(Color(0xFFEB001B), RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(24.dp, 16.dp).background(Color(0xFF0056B3), RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(24.dp, 16.dp).background(Color(0xFFEB001B), RoundedCornerShape(2.dp)))
                 }
             }
 
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFFBDBDBD),
-                modifier = Modifier.size(24.dp)
+                tint = extendedColors.textSecondary,
+                modifier = Modifier.size(20.dp)
             )
+        }
+    }
+
+    if (isInsideContainer) {
+        Box(modifier = Modifier.clickable { onClick() }) {
+            content()
+        }
+    } else {
+        Surface(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .clickable { onClick() },
+            shape = RoundedCornerShape(24.dp),
+            color = extendedColors.glass,
+            border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+        ) {
+            content()
         }
     }
 }
 
 @Composable
 fun PaymentSummaryBottomBar(amount: String) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Surface(
-        color = Color.White,
-        shadowElevation = 8.dp
+        color = extendedColors.surface,
+        shadowElevation = 16.dp,
+        tonalElevation = 8.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
     ) {
         Column(
             modifier = Modifier
+                .navigationBarsPadding()
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
-                Text("\u09f3 $amount", fontSize = 14.sp)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Total Amount", fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                Text(
-                    "\u09f3 $amount",
-                    color = Color(0xFFF36F21), // Orange-ish Total
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
+                Column {
+                    Text("Total Payable", style = MaterialTheme.typography.labelMedium, color = extendedColors.textSecondary)
+                    Text(
+                        "৳ $amount",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                Button(
+                    onClick = { /* Implicit action from parent */ },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.height(48.dp).width(140.dp)
+                ) {
+                    Text("Proceed", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -288,7 +326,6 @@ fun getBrandColor(name: String): Color {
         cleanName.contains("rocket") -> Color(0xFF8C3494)
         cleanName.contains("upay") -> Color(0xFF00ADEF)
         cleanName.contains("card") || cleanName.contains("visa") || cleanName.contains("mastercard") -> Color(0xFF0061C1)
-        cleanName.contains("ibbl") -> Color(0xFF008000)
-        else -> Color(0xFF555555)
+        else -> Color(0xFF3269B5)
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import kotlinx.coroutines.launch
 
@@ -38,18 +39,20 @@ fun MRTPassLoginScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("MRT Pass Portal", fontWeight = FontWeight.Bold) },
+                title = { Text("MRT Pass Portal", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = extendedColors.textPrimary
                         )
                     }
                 },
@@ -62,29 +65,21 @@ fun MRTPassLoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F5F9),
-                            Color(0xFFE2E8F0),
-                            Color(0xFFCBD5E1)
-                        )
-                    )
-                )
+                .background(extendedColors.backgroundGradient)
         ) {
             // Decorative background elements for glass effect
             Box(
                 modifier = Modifier
                     .size(200.dp)
                     .offset(x = (-50).dp, y = 100.dp)
-                    .background(Color(0xFF006A4E).copy(alpha = 0.1f), CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), CircleShape)
             )
             Box(
                 modifier = Modifier
                     .size(150.dp)
                     .align(Alignment.CenterEnd)
                     .offset(x = 50.dp, y = (-100).dp)
-                    .background(Color(0xFF3269B5).copy(alpha = 0.1f), CircleShape)
+                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f), CircleShape)
             )
 
             Column(
@@ -101,8 +96,8 @@ fun MRTPassLoginScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(32.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
                     shadowElevation = 0.dp
                 ) {
                     Column(
@@ -113,12 +108,12 @@ fun MRTPassLoginScreen(
                             text = "Login to Portal",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1E293B)
+                            color = extendedColors.textPrimary
                         )
                         Text(
                             text = "Manage your MRT Pass",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF64748B)
+                            color = extendedColors.textSecondary
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -130,11 +125,13 @@ fun MRTPassLoginScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF006A4E),
-                                unfocusedBorderColor = Color(0xFF006A4E).copy(alpha = 0.3f),
-                                focusedContainerColor = Color.White.copy(alpha = 0.3f),
-                                unfocusedContainerColor = Color.White.copy(alpha = 0.3f),
-                                cursorColor = Color(0xFF006A4E)
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = extendedColors.textSecondary.copy(alpha = 0.3f),
+                                focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                                unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
+                                focusedTextColor = extendedColors.textPrimary,
+                                unfocusedTextColor = extendedColors.textPrimary,
+                                cursorColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
@@ -152,17 +149,19 @@ fun MRTPassLoginScreen(
                                     Icon(
                                         imageVector = if (viewModel.passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = null,
-                                        tint = Color(0xFF006A4E)
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF006A4E),
-                                unfocusedBorderColor = Color(0xFF006A4E).copy(alpha = 0.3f),
-                                focusedContainerColor = Color.White.copy(alpha = 0.3f),
-                                unfocusedContainerColor = Color.White.copy(alpha = 0.3f),
-                                cursorColor = Color(0xFF006A4E)
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = extendedColors.textSecondary.copy(alpha = 0.3f),
+                                focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                                unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
+                                focusedTextColor = extendedColors.textPrimary,
+                                unfocusedTextColor = extendedColors.textPrimary,
+                                cursorColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
@@ -172,7 +171,7 @@ fun MRTPassLoginScreen(
                         ) {
                             Text(
                                 text = "Forgot password?",
-                                color = Color(0xFF006A4E),
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier
@@ -209,7 +208,7 @@ fun MRTPassLoginScreen(
                                     .fillMaxSize()
                                     .background(
                                         Brush.horizontalGradient(
-                                            listOf(Color(0xFF006A4E), Color(0xFF10B981))
+                                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                         )
                                     ),
                                 contentAlignment = Alignment.Center
@@ -221,10 +220,10 @@ fun MRTPassLoginScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Row {
-                            Text("Don't have an account? ", color = Color(0xFF64748B), style = MaterialTheme.typography.bodyMedium)
+                            Text("Don't have an account? ", color = extendedColors.textSecondary, style = MaterialTheme.typography.bodyMedium)
                             Text(
                                 text = "Sign Up",
-                                color = Color(0xFF006A4E),
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.clickable { /* Dummy */ }
@@ -241,8 +240,8 @@ fun MRTPassLoginScreen(
                         .fillMaxWidth()
                         .height(58.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF006A4E).copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A4E))
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(12.dp))

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.metrotransit.data.MetroStation
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.StationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,43 +33,51 @@ fun StationListScreen(
 ) {
     var selectedStation by remember { mutableStateOf<MetroStation?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Line-6 Stations", fontWeight = FontWeight.Bold) },
+                title = { Text("Line-6 Stations", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(extendedColors.backgroundGradient)
         ) {
-            SearchBar(
-                query = viewModel.searchQuery,
-                onQueryChange = { viewModel.searchQuery = it }
-            )
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
-                items(viewModel.filteredStations) { station ->
-                    StationCard(
-                        station = station,
-                        onClick = {
-                            selectedStation = station
-                            showDialog = true
-                        }
-                    )
+                SearchBar(
+                    query = viewModel.searchQuery,
+                    onQueryChange = { viewModel.searchQuery = it }
+                )
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(viewModel.filteredStations) { station ->
+                        StationCard(
+                            station = station,
+                            onClick = {
+                                selectedStation = station
+                                showDialog = true
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -84,18 +93,23 @@ fun StationListScreen(
 
 @Composable
 fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+    val extendedColors = MetroTransitTheme.extendedColors
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        placeholder = { Text("Search by name or code...") },
+        placeholder = { Text("Search by name or code...", color = extendedColors.textSecondary) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-            focusedBorderColor = MaterialTheme.colorScheme.primary
+            unfocusedBorderColor = extendedColors.glassBorder,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedContainerColor = extendedColors.glass,
+            focusedContainerColor = extendedColors.glass,
+            unfocusedTextColor = extendedColors.textPrimary,
+            focusedTextColor = extendedColors.textPrimary
         ),
         singleLine = true
     )
@@ -103,13 +117,14 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
 
 @Composable
 fun StationCard(station: MetroStation, onClick: () -> Unit) {
-    Card(
+    val extendedColors = MetroTransitTheme.extendedColors
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        color = extendedColors.glass,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
     ) {
         Row(
             modifier = Modifier
@@ -136,19 +151,20 @@ fun StationCard(station: MetroStation, onClick: () -> Unit) {
                 Text(
                     text = station.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = extendedColors.textPrimary
                 )
                 Text(
                     text = "Code: ${station.code}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = extendedColors.textSecondary
                 )
             }
             
             Icon(
                 Icons.Default.Info,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
+                tint = extendedColors.textSecondary,
                 modifier = Modifier.size(20.dp)
             )
         }

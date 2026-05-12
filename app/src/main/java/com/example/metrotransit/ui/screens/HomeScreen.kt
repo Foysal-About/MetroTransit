@@ -1,7 +1,6 @@
 package com.example.metrotransit.ui.screens
 
 import android.app.Activity
-import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,16 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AltRoute
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.Login
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,6 +38,7 @@ import com.airbnb.lottie.compose.*
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.nfc.NfcManager
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
@@ -61,6 +58,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val activity = context as Activity
     val nfcManager = remember { NfcManager(activity) }
+    
+    val extendedColors = MetroTransitTheme.extendedColors
     
     var rotationAngle by remember { mutableStateOf(0f) }
     val animatedRotation by animateFloatAsState(
@@ -83,12 +82,11 @@ fun HomeScreen(
     if (viewModel.isLocating) {
         LaunchedEffect(Unit) {
             try {
-                // Check if we have permission before calling lastLocation
                 if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                     ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     val location = locationClient.lastLocation.await()
                     if (location != null) {
-                        kotlinx.coroutines.delay(1500) // Delay to show "detecting" message as requested
+                        kotlinx.coroutines.delay(1500)
                         viewModel.findNearestStation(location.latitude, location.longitude)
                     }
                 }
@@ -117,10 +115,8 @@ fun HomeScreen(
         }
     }
 
-    // When a scan completes (isScanning goes false AND we have a balance),
-    // close the bottom sheet and navigate to the results screen.
-    val isScanning       = viewModel.isScanning
-    val hasResult        = viewModel.scannedBalance != null || viewModel.scanError != null
+    val isScanning = viewModel.isScanning
+    val hasResult = viewModel.scannedBalance != null || viewModel.scanError != null
 
     LaunchedEffect(isScanning, hasResult) {
         if (!isScanning && hasResult && viewModel.showScanSheet) {
@@ -160,13 +156,13 @@ fun HomeScreen(
                             "MetroTransit BD",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFF1E293B)
+                                color = extendedColors.textPrimary
                             )
                         )
                         Text(
                             "Dhaka Metro Rail",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF64748B)
+                            color = extendedColors.textSecondary
                         )
                     }
                 },
@@ -175,7 +171,7 @@ fun HomeScreen(
                         Icon(
                             Icons.Default.Train,
                             contentDescription = "Stations",
-                            tint = Color(0xFF3269B5)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -188,15 +184,7 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F5F9),
-                            Color(0xFFE2E8F0),
-                            Color(0xFFCBD5E1)
-                        )
-                    )
-                )
+                .background(extendedColors.backgroundGradient)
         ) {
             Column(
                 modifier = Modifier
@@ -213,8 +201,8 @@ fun HomeScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(28.dp),
-                        color = Color.White.copy(alpha = 0.6f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                        color = extendedColors.glass,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                     ) {
                         Column(
                             modifier = Modifier.padding(24.dp),
@@ -223,7 +211,7 @@ fun HomeScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 JourneyPoint(
                                     icon = Icons.Default.MyLocation,
-                                    color = Color(0xFF3269B5)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 StationSelector(
@@ -248,16 +236,16 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF3269B5).copy(alpha = 0.1f))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                                 ) {
                                     if (viewModel.isLocating) {
-                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color(0xFF3269B5))
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
                                     } else {
                                         Icon(
                                             Icons.Default.MyLocation,
                                             contentDescription = "Find Nearest",
                                             modifier = Modifier.size(20.dp),
-                                            tint = Color(0xFF3269B5)
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
@@ -277,7 +265,7 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(2.dp)
-                                            .background(Color(0xFF3269B5).copy(alpha = 0.2f))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -289,8 +277,8 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.5f))
-                                        .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                                        .background(extendedColors.glass)
+                                        .border(1.dp, extendedColors.glassBorder, CircleShape)
                                 ) {
                                     Icon(
                                         Icons.Default.SwapVert,
@@ -298,7 +286,7 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .size(20.dp)
                                             .graphicsLayer { rotationZ = animatedRotation },
-                                        tint = Color(0xFF3269B5)
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -340,8 +328,8 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                Brush.horizontalGradient(
-                                    listOf(Color(0xFF3269B5), Color(0xFF5A67D8))
+                                androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -361,7 +349,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 24.dp),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E293B)
+                    color = extendedColors.textPrimary
                 )
 
                 // ── Info cards (Glass Effect) ──────────────────────────────────
@@ -389,8 +377,8 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
                     onClick = onNavigateToMRTPass
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -413,12 +401,12 @@ fun HomeScreen(
                                     "MRT Pass Portal",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E293B)
+                                    color = extendedColors.textPrimary
                                 )
                                 Text(
                                     "Manage cards & recharges",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF64748B)
+                                    color = extendedColors.textSecondary
                                 )
                             }
                         }
@@ -429,7 +417,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White.copy(alpha = 0.3f))
+                                .background(extendedColors.textSecondary.copy(alpha = 0.1f))
                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
@@ -461,8 +449,8 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -484,12 +472,12 @@ fun HomeScreen(
                                     "Metro Buddy",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E293B)
+                                    color = extendedColors.textPrimary
                                 )
                                 Text(
                                     "Scan physical card via NFC",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF64748B)
+                                    color = extendedColors.textSecondary
                                 )
                             }
                         }
@@ -500,7 +488,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White.copy(alpha = 0.3f))
+                                .background(extendedColors.textSecondary.copy(alpha = 0.1f))
                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
@@ -535,21 +523,21 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                    color = extendedColors.glass,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
                     onClick = onNavigateToFareCalculator
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = Color(0xFF3269B5).copy(alpha = 0.1f),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                 modifier = Modifier.size(56.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Calculate,
                                     contentDescription = null,
-                                    tint = Color(0xFF3269B5),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(14.dp)
                                 )
                             }
@@ -559,12 +547,12 @@ fun HomeScreen(
                                     "Fare Calculator",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E293B)
+                                    color = extendedColors.textPrimary
                                 )
                                 Text(
                                     "Check timetable & journey fare",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF64748B)
+                                    color = extendedColors.textSecondary
                                 )
                             }
                         }
@@ -577,7 +565,7 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3269B5))
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(12.dp))
@@ -592,9 +580,6 @@ fun HomeScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// NFC bottom sheet — now shows a spinner while the card is being read
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun NFCScanBottomSheetContent(
     isScanning: Boolean,
@@ -690,9 +675,6 @@ fun NFCScanBottomSheetContent(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Small reusable composables
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -712,7 +694,7 @@ fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.Black,
+            color = MetroTransitTheme.extendedColors.textPrimary,
             fontWeight = FontWeight.Medium
         )
     }
@@ -744,6 +726,7 @@ fun StationSelector(
     isLocating: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val extendedColors = MetroTransitTheme.extendedColors
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -754,12 +737,12 @@ fun StationSelector(
             value = if (isLocating) "Detecting nearby station..." else (selectedStation?.name ?: ""),
             onValueChange = {},
             readOnly = true,
-            placeholder = { Text("Select Station", color = Color(0xFF94A3B8)) },
+            placeholder = { Text("Select Station", color = extendedColors.textSecondary) },
             label = { 
                 Text(
                     label, 
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (expanded) Color(0xFF3269B5) else Color(0xFF64748B),
+                    color = if (expanded) MaterialTheme.colorScheme.primary else extendedColors.textSecondary,
                     fontWeight = FontWeight.Bold
                 ) 
             },
@@ -769,20 +752,20 @@ fun StationSelector(
                     Icon(
                         if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
-                        tint = if (expanded) Color(0xFF3269B5) else Color(0xFF64748B)
+                        tint = if (expanded) MaterialTheme.colorScheme.primary else extendedColors.textSecondary
                     )
                 }
             },
             colors = TextFieldDefaults.colors(
-                focusedContainerColor   = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor  = Color.Transparent,
-                focusedIndicatorColor   = Color(0xFF3269B5).copy(alpha = 0.5f),
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                 unfocusedIndicatorColor = Color.Transparent,
             ),
             textStyle = (if (isLocating) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge).copy(
                 fontWeight = FontWeight.Bold,
-                color = if (isLocating) Color(0xFF3269B5) else if (selectedStation == null) Color(0xFF94A3B8) else Color(0xFF1E293B)
+                color = if (isLocating) MaterialTheme.colorScheme.primary else if (selectedStation == null) extendedColors.textSecondary else extendedColors.textPrimary
             ),
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -796,8 +779,8 @@ fun StationSelector(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                    .background(extendedColors.surface)
+                    .border(1.dp, extendedColors.glassBorder, RoundedCornerShape(16.dp))
             ) {
                 StationData.stations.forEach { station ->
                     val isSelected = selectedStation?.id == station.id
@@ -807,13 +790,13 @@ fun StationSelector(
                                 station.name,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color(0xFF3269B5) else Color(0xFF334155)
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else extendedColors.textPrimary
                             ) 
                         },
                         leadingIcon = {
                             Surface(
                                 shape = CircleShape,
-                                color = if (isSelected) Color(0xFF3269B5).copy(alpha = 0.1f) else Color(0xFFF1F5F9),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else extendedColors.textSecondary.copy(alpha = 0.1f),
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -821,7 +804,7 @@ fun StationSelector(
                                         Icons.Default.Train,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
-                                        tint = if (isSelected) Color(0xFF3269B5) else Color(0xFF64748B)
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else extendedColors.textSecondary
                                     )
                                 }
                             }
@@ -832,14 +815,14 @@ fun StationSelector(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(if (isSelected) Color(0xFF3269B5).copy(alpha = 0.05f) else Color.Transparent),
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else Color.Transparent),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     )
                     if (station != StationData.stations.last()) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             thickness = 0.5.dp,
-                            color = Color(0xFFF1F5F9)
+                            color = extendedColors.glassBorder
                         )
                     }
                 }
@@ -850,18 +833,19 @@ fun StationSelector(
 
 @Composable
 fun InfoCard(title: String, value: String, modifier: Modifier = Modifier) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = Color.White.copy(alpha = 0.6f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+        color = extendedColors.glass,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(title, style = MaterialTheme.typography.labelSmall, color = Color(0xFF64748B))
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+            Text(title, style = MaterialTheme.typography.labelSmall, color = extendedColors.textSecondary)
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = extendedColors.textPrimary)
         }
     }
 }
