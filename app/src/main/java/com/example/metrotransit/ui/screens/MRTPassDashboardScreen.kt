@@ -250,7 +250,7 @@ fun MRTPassDashboardScreen(
                         items(cards) { card ->
                             EnhancedCardItem(
                                 card = card,
-                                onSeeDetails = { /* Dummy */ },
+                                onSeeDetails = onShowHistory,
                                 onRecharge = { onRecharge(card) }
                             )
                         }
@@ -321,7 +321,9 @@ fun EnhancedCardItem(
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSeeDetails() },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -329,8 +331,7 @@ fun EnhancedCardItem(
                     text = "Transaction History",
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable { onSeeDetails() }
+                    fontSize = 14.sp
                 )
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }

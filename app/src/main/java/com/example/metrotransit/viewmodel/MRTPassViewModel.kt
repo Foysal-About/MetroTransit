@@ -20,7 +20,8 @@ class MRTPassViewModel : ViewModel() {
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
     private val _cards = MutableStateFlow(listOf(
-        MRTPassCard("SYED FOYSAL", "MP31C23112300869", "Active", 35.00, "MRT")
+        MRTPassCard("SYED FOYSAL", "MP31C23112300869", "Active", 35.00, "MRT"),
+        MRTPassCard("SYED FOYSAL", "MP31C23112300999", "Active", 120.00, "MRT")
     ))
     val cards = _cards.asStateFlow()
 

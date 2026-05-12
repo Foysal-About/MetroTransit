@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.MetroGreen
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 
@@ -53,7 +54,7 @@ fun SplashScreen(onNavigateToHome: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.DirectionsTransit,
                 contentDescription = "Logo",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MetroGreen,
                 modifier = Modifier.scale(2f)
             )
             Spacer(modifier = Modifier.height(24.dp))

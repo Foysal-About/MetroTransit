@@ -9,6 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.*
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
@@ -575,10 +580,132 @@ fun HomeScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                // ── Advertisements (Horizontally Scrollable) ──────────────────
+                Text(
+                    "Featured Deals",
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = extendedColors.textPrimary
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val ads = listOf(
+                        AdItem(
+                            title = "১০% ইনস্ট্যান্ট ক্যাশব্যাক",
+                            description = "বিকাশ অ্যাপ দিয়ে পেমেন্ট করলেই অফারটি উপভোগ করুন",
+                            themeColor = Color(0xFFE2136E),
+                            icon = Icons.Default.Payments,
+                            imageUrl = "https://www.bkash.com/uploads/images/Campaign-Banner-En.jpg"
+                        ),
+                        AdItem("Foodpanda", "Hungry? Order now and get free delivery to stations!", Color(0xFFFF2B44), Icons.Default.Restaurant),
+                        AdItem("Travel Insurance", "Insure your journey for just ৳5 per trip.", Color(0xFF007AFF), Icons.Default.Security)
+                    )
+                    items(ads) { ad ->
+                        AdvertisementCard(ad)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 }
+
+@Composable
+fun AdvertisementCard(ad: AdItem) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    Surface(
+        modifier = Modifier
+            .width(300.dp)
+            .height(140.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = extendedColors.glass,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+    ) {
+        if (ad.imageUrl != null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = ad.imageUrl,
+                    contentDescription = ad.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                    onError = { 
+                        android.util.Log.e("Coil", "Failed to load image: ${it.result.throwable.message}")
+                    }
+                )
+                // Fallback text if image fails to load or as overlay
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Text(
+                        ad.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = ad.themeColor.copy(alpha = 0.1f),
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Icon(
+                        ad.icon,
+                        contentDescription = null,
+                        tint = ad.themeColor,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column {
+                    Text(
+                        ad.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        ad.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = extendedColors.textSecondary,
+                        maxLines = 3
+                    )
+                }
+            }
+        }
+    }
+}
+
+data class AdItem(
+    val title: String,
+    val description: String,
+    val themeColor: Color,
+    val icon: ImageVector,
+    val imageUrl: String? = null
+)
 
 @Composable
 fun NFCScanBottomSheetContent(

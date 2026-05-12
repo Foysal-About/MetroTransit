@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.RechargeTransaction
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,11 +28,20 @@ fun RechargeHistoryScreen(
 ) {
     val history by viewModel.rechargeHistory.collectAsState()
     var isBackTriggered by remember { mutableStateOf(false) }
+    val extendedColors = MetroTransitTheme.extendedColors
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Recharge History", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) },
+                title = { 
+                    Text(
+                        "Recharge History", 
+                        fontSize = 20.sp, 
+                        fontWeight = FontWeight.ExtraBold,
+                        color = extendedColors.textPrimary
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (!isBackTriggered) {
@@ -41,28 +51,32 @@ fun RechargeHistoryScreen(
                     }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack, 
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = extendedColors.textPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = Color.Transparent
                 )
             )
         }
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFF121212)),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(extendedColors.backgroundGradient)
         ) {
-            items(history) { transaction ->
-                RechargeHistoryItem(transaction)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(history) { transaction ->
+                    RechargeHistoryItem(transaction)
+                }
             }
         }
     }
@@ -70,10 +84,12 @@ fun RechargeHistoryScreen(
 
 @Composable
 fun RechargeHistoryItem(transaction: RechargeTransaction) {
-    Card(
+    val extendedColors = MetroTransitTheme.extendedColors
+    Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E))
+        color = extendedColors.glass,
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -85,14 +101,14 @@ fun RechargeHistoryItem(transaction: RechargeTransaction) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = "ID: ${transaction.paymentId}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4CAF50),
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -100,15 +116,15 @@ fun RechargeHistoryItem(transaction: RechargeTransaction) {
                     text = "৳ ${transaction.amount}",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
-                    color = Color.White
+                    color = extendedColors.textPrimary
                 )
             }
 
-            HorizontalDivider(thickness = 1.dp, color = Color.White.copy(alpha = 0.05f))
+            HorizontalDivider(thickness = 1.dp, color = extendedColors.glassBorder)
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                HistoryDetailRow("Card Number", transaction.cardNumber)
-                HistoryDetailRow("Date & Time", transaction.dateTime)
+                HistoryDetailLine("Card Number", transaction.cardNumber)
+                HistoryDetailLine("Date & Time", transaction.dateTime)
             }
 
             Row(
@@ -116,12 +132,12 @@ fun RechargeHistoryItem(transaction: RechargeTransaction) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusBadge(
+                HistoryStatusBadge(
                     text = transaction.paymentStatus,
                     isSuccess = transaction.paymentStatus.contains("Successful")
                 )
                 if (transaction.rechargeStatus != null) {
-                    StatusBadge(
+                    HistoryStatusBadge(
                         text = transaction.rechargeStatus,
                         isSuccess = transaction.rechargeStatus.contains("Successful")
                     )
@@ -132,19 +148,20 @@ fun RechargeHistoryItem(transaction: RechargeTransaction) {
 }
 
 @Composable
-fun HistoryDetailRow(label: String, value: String) {
+fun HistoryDetailLine(label: String, value: String) {
+    val extendedColors = MetroTransitTheme.extendedColors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, fontSize = 13.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
-        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.LightGray)
+        Text(text = label, fontSize = 13.sp, color = extendedColors.textSecondary, fontWeight = FontWeight.Medium)
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = extendedColors.textPrimary)
     }
 }
 
 @Composable
-fun StatusBadge(text: String, isSuccess: Boolean) {
-    val color = if (isSuccess) Color(0xFF4CAF50) else Color(0xFFE57373)
+fun HistoryStatusBadge(text: String, isSuccess: Boolean) {
+    val color = if (isSuccess) Color(0xFF10B981) else Color(0xFFEF4444)
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = RoundedCornerShape(6.dp),
