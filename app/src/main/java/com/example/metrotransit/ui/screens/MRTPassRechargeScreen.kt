@@ -99,7 +99,7 @@ fun MRTPassRechargeScreen(
                         modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        PhysicalCardVisual(type = selectedCard.type)
+                        PhysicalCardVisual()
                         
                         Spacer(modifier = Modifier.height(20.dp))
                         

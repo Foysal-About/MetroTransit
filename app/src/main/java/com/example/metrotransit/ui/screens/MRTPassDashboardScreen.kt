@@ -86,7 +86,7 @@ fun MRTPassDashboardScreen(
                             letterSpacing = 0.5.sp
                         )
                         Text(
-                            "syed.foysal@example.com",
+                            "foysalislam76@gmail.com",
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 14.sp
                         )
@@ -299,7 +299,7 @@ fun EnhancedCardItem(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Physical Card Visual Simulation
-            PhysicalCardVisual(type = card.type)
+            PhysicalCardVisual()
             
             Spacer(modifier = Modifier.height(20.dp))
             

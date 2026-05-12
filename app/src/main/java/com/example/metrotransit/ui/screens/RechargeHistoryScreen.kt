@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,8 +30,8 @@ fun RechargeHistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Recharge History", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = { Text("Recharge History", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (!isBackTriggered) {
@@ -38,10 +39,17 @@ fun RechargeHistoryScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back"
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF121212),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -49,9 +57,9 @@ fun RechargeHistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F5F5)),
+                .background(Color(0xFF121212)),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(history) { transaction ->
                 RechargeHistoryItem(transaction)
@@ -64,41 +72,49 @@ fun RechargeHistoryScreen(
 fun RechargeHistoryItem(transaction: RechargeTransaction) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E))
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Surface(
+                    color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "ID: ${transaction.paymentId}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
                 Text(
-                    text = "SL: ${transaction.sl}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "\u09f3 ${transaction.amount}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1976D2)
+                    text = "৳ ${transaction.amount}",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White
                 )
             }
 
-            HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFEEEEEE))
+            HorizontalDivider(thickness = 1.dp, color = Color.White.copy(alpha = 0.05f))
 
-            HistoryDetailRow("Card Number", transaction.cardNumber)
-            HistoryDetailRow("Payment ID", transaction.paymentId)
-            HistoryDetailRow("Date & Time", transaction.dateTime)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HistoryDetailRow("Card Number", transaction.cardNumber)
+                HistoryDetailRow("Date & Time", transaction.dateTime)
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 StatusBadge(
                     text = transaction.paymentStatus,
@@ -121,23 +137,35 @@ fun HistoryDetailRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, fontSize = 13.sp, color = Color.Gray)
-        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.DarkGray)
+        Text(text = label, fontSize = 13.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.LightGray)
     }
 }
 
 @Composable
 fun StatusBadge(text: String, isSuccess: Boolean) {
+    val color = if (isSuccess) Color(0xFF4CAF50) else Color(0xFFE57373)
     Surface(
-        color = if (isSuccess) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-        shape = RoundedCornerShape(4.dp)
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(6.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
     ) {
-        Text(
-            text = text,
-            color = if (isSuccess) Color(0xFF2E7D32) else Color(0xFFC62828),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(color, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = text,
+                color = color,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
     }
 }
