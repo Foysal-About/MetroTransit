@@ -11,8 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +44,8 @@ import com.example.metrotransit.nfc.NfcManager
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,14 +89,24 @@ fun HomeScreen(
             try {
                 if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                     ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    val location = locationClient.lastLocation.await()
+                    
+                    var location = locationClient.lastLocation.await()
+                    
+                    if (location == null) {
+                        val cts = CancellationTokenSource()
+                        location = locationClient.getCurrentLocation(
+                            Priority.PRIORITY_HIGH_ACCURACY,
+                            cts.token
+                        ).await()
+                    }
+
                     if (location != null) {
-                        kotlinx.coroutines.delay(1500)
+                        kotlinx.coroutines.delay(1000)
                         viewModel.findNearestStation(location.latitude, location.longitude)
                     }
                 }
             } catch (e: Exception) {
-                // Handle error
+                android.util.Log.e("HomeScreen", "Error finding location: ${e.message}")
             } finally {
                 viewModel.isLocating = false
             }
@@ -349,32 +359,32 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    "Services & Portal",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = extendedColors.textPrimary
-                )
-
-                // ── Info cards (Glass Effect) ──────────────────────────────────
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    InfoCard(
-                        title = "Stations",
-                        value = StationData.stations.size.toString(),
-                        modifier = Modifier.weight(1f)
-                    )
-                    InfoCard(
-                        title = "Full Journey",
-                        value = "~35 min",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+//                Text(
+//                    "Services & Portal",
+//                    modifier = Modifier.padding(horizontal = 24.dp),
+//                    style = MaterialTheme.typography.titleSmall,
+//                    fontWeight = FontWeight.Bold,
+//                    color = extendedColors.textPrimary
+//                )
+//
+//                // ── Info cards (Glass Effect) ──────────────────────────────────
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+//                ) {
+//                    InfoCard(
+//                        title = "Stations",
+//                        value = StationData.stations.size.toString(),
+//                        modifier = Modifier.weight(1f)
+//                    )
+//                    InfoCard(
+//                        title = "Full Journey",
+//                        value = "~35 min",
+//                        modifier = Modifier.weight(1f)
+//                    )
+//                }
 
                 // ── MRT Pass Portal card (Glass Effect) ────────────────────────
                 Surface(
