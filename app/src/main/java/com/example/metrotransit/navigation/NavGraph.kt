@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.example.metrotransit.ui.screens.*
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.example.metrotransit.viewmodel.MRTPassViewModel
+import com.example.metrotransit.viewmodel.TicketViewModel
+import com.example.metrotransit.data.StationData
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -43,6 +45,13 @@ sealed class Screen(val route: String) {
     object PaymentGateway : Screen("payment_gateway/{amount}") {
         fun createRoute(amount: String) = "payment_gateway/$amount"
     }
+    object QuickPay : Screen("quick_pay/{fromId}/{toId}") {
+        fun createRoute(fromId: Int, toId: Int) = "quick_pay/$fromId/$toId"
+    }
+    object MyTickets : Screen("my_tickets")
+    object TicketDetails : Screen("ticket_details/{ticketId}") {
+        fun createRoute(ticketId: String) = "ticket_details/$ticketId"
+    }
 }
 
 @Composable
@@ -51,6 +60,7 @@ fun NavGraph(
     homeViewModel: HomeViewModel          // ← received from MainActivity, not created here
 ) {
     val mrtPassViewModel: MRTPassViewModel = viewModel()
+    val ticketViewModel: TicketViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -69,8 +79,11 @@ fun NavGraph(
                 onShowTrains = { fromId, toId ->
                     navController.navigate(Screen.Result.createRoute(fromId, toId))
                 },
+                onQuickPay = { fromId, toId ->
+                    navController.navigate(Screen.QuickPay.createRoute(fromId, toId))
+                },
                 onViewStations = {
-                    navController.navigate(Screen.Stations.route)
+                    navController.navigate(Screen.MyTickets.route)
                 },
                 onNavigateToMRTPass = {
                     navController.navigate(Screen.MRTPassLogin.route)
@@ -108,7 +121,10 @@ fun NavGraph(
             ResultScreen(
                 fromId = fromId,
                 toId   = toId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onQuickPay = { fId, tId ->
+                    navController.navigate(Screen.QuickPay.createRoute(fId, tId))
+                }
             )
         }
 
@@ -303,6 +319,67 @@ fun NavGraph(
 
         composable(Screen.MRTPassWebView.route) {
             MRTPassWebViewScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.QuickPay.route,
+            arguments = listOf(
+                navArgument("fromId") { type = NavType.IntType },
+                navArgument("toId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val fromId = backStackEntry.arguments?.getInt("fromId") ?: 0
+            val toId = backStackEntry.arguments?.getInt("toId") ?: 0
+            QuickPayScreen(
+                fromId = fromId,
+                toId = toId,
+                onBack = { navController.popBackStack() },
+                onViewTickets = {
+                    navController.navigate(Screen.MyTickets.route)
+                },
+                onPaymentSuccess = {
+                    val from = StationData.stations.find { it.id == fromId }?.name ?: "Unknown"
+                    val to = StationData.stations.find { it.id == toId }?.name ?: "Unknown"
+                    val diff = kotlin.math.abs(StationData.stations.indexOfFirst { it.id == fromId } - StationData.stations.indexOfFirst { it.id == toId })
+                    val fare = "৳${20 + diff * 5}"
+                    
+                    ticketViewModel.addTicket(from, to, fare)
+                    val newTicket = ticketViewModel.tickets.first()
+                    
+                    navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.MyTickets.route) {
+            MyTicketsScreen(
+                viewModel = ticketViewModel,
+                onBack = { navController.popBackStack() },
+                onTicketClick = { ticket ->
+                    navController.navigate(Screen.TicketDetails.createRoute(ticket.id))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.TicketDetails.route,
+            arguments = listOf(navArgument("ticketId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""
+            val ticket = ticketViewModel.tickets.find { it.id == ticketId }
+            if (ticket != null) {
+                TicketDetailsScreen(
+                    ticket = ticket,
+                    onBack = { navController.popBackStack() },
+                    onClose = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
     }
 }

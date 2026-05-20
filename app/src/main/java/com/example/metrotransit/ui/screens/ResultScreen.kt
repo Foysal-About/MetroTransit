@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +34,7 @@ fun ResultScreen(
     fromId: Int,
     toId: Int,
     onBack: () -> Unit,
+    onQuickPay: (Int, Int) -> Unit,
     viewModel: ResultViewModel = viewModel()
 ) {
     val currentTime by viewModel.currentTime.collectAsState()
@@ -166,6 +168,25 @@ fun ResultScreen(
             }
             
             Spacer(modifier = Modifier.weight(1f))
+
+            // Pay Button
+            Button(
+                onClick = { onQuickPay(fromId, toId) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E))
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Pay for this journey", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Footer status
             Box(

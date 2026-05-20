@@ -52,6 +52,7 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun HomeScreen(
     onShowTrains: (Int, Int) -> Unit,
+    onQuickPay: (Int, Int) -> Unit,
     onViewStations: () -> Unit,
     onNavigateToMRTPass: () -> Unit,
     onNavigateToNFCResult: () -> Unit,
@@ -184,8 +185,8 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = onViewStations) {
                         Icon(
-                            Icons.Default.Train,
-                            contentDescription = "Stations",
+                            Icons.Default.ConfirmationNumber,
+                            contentDescription = "My Tickets",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -353,6 +354,48 @@ fun HomeScreen(
                             Icon(Icons.AutoMirrored.Filled.AltRoute, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text("Find Next Trains", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // ── Pay button ──────────────────────────────────────────────
+                Button(
+                    onClick = {
+                        val fromId = viewModel.fromStation?.id ?: 0
+                        val toId   = viewModel.toStation?.id   ?: 0
+                        if (fromId != toId) onQuickPay(fromId, toId)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(64.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(),
+                    enabled = viewModel.fromStation != null && viewModel.toStation != null && viewModel.fromStation!!.id != viewModel.toStation!!.id
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                if (viewModel.fromStation != null && viewModel.toStation != null && viewModel.fromStation!!.id != viewModel.toStation!!.id)
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(Color.Black.copy(alpha = 0.9f), Color(0xFF1C1C1E).copy(alpha = 0.9f))
+                                    )
+                                else
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(Color.Gray.copy(alpha = 0.5f), Color.Gray.copy(alpha = 0.3f))
+                                    )
+                            )
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("QR Pay", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
