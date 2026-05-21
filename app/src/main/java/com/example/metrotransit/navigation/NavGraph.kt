@@ -334,8 +334,9 @@ fun NavGraph(
                 fromId = fromId,
                 toId = toId,
                 onBack = { navController.popBackStack() },
-                onViewTickets = {
-                    navController.navigate(Screen.MyTickets.route)
+                ticketViewModel = ticketViewModel,
+                onTicketClick = { ticketId ->
+                    navController.navigate(Screen.TicketDetails.createRoute(ticketId))
                 },
                 onPaymentSuccess = {
                     val from = StationData.stations.find { it.id == fromId }?.name ?: "Unknown"

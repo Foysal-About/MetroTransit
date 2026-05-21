@@ -1,11 +1,11 @@
 package com.example.metrotransit.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -16,10 +16,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.QRTicket
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.TicketViewModel
@@ -50,7 +51,7 @@ fun MyTicketsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(extendedColors.backgroundGradient)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (viewModel.tickets.isEmpty()) {
                 Column(
@@ -92,86 +93,150 @@ fun MyTicketsScreen(
 fun TicketCard(ticket: QRTicket, onClick: () -> Unit) {
     val extendedColors = MetroTransitTheme.extendedColors
     val isActive = ticket.status == "Active"
+    val statusColor = if (isActive) Color(0xFF10B981) else extendedColors.textSecondary
+    val statusBgColor = if (isActive) Color(0xFFD1FAE5) else MaterialTheme.colorScheme.surfaceVariant
     
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
-        color = extendedColors.glass,
-        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isActive) Color(0xFF10B981).copy(alpha = 0.1f) else extendedColors.textSecondary.copy(alpha = 0.1f),
-                modifier = Modifier.size(56.dp)
+        Column {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.QrCode,
-                    contentDescription = null,
-                    tint = if (isActive) Color(0xFF10B981) else extendedColors.textSecondary,
-                    modifier = Modifier.padding(14.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        ticket.fromStation,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = extendedColors.textPrimary
-                    )
+                // QR Icon Container
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = statusBgColor,
+                    modifier = Modifier.size(52.dp)
+                ) {
                     Icon(
-                        Icons.Default.Train,
+                        Icons.Default.QrCode,
                         contentDescription = null,
-                        modifier = Modifier.padding(horizontal = 4.dp).size(14.dp),
-                        tint = extendedColors.textSecondary
-                    )
-                    Text(
-                        ticket.toStation,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = extendedColors.textPrimary
+                        tint = statusColor,
+                        modifier = Modifier.padding(12.dp)
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            ticket.fromStation,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = extendedColors.textPrimary
+                        )
+                        Icon(
+                            Icons.Default.Train,
+                            contentDescription = null,
+                            modifier = Modifier.padding(horizontal = 6.dp).size(16.dp),
+                            tint = extendedColors.textSecondary
+                        )
+                        Text(
+                            ticket.toStation,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = extendedColors.textPrimary
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        ticket.dateTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extendedColors.textSecondary
+                    )
+                }
+                
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        ticket.fare,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = statusBgColor,
+                    ) {
+                        Text(
+                            ticket.status,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = statusColor
+                        )
+                    }
+                }
+            }
+            
+            // Dotted Divider with side cutouts
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val backgroundColor = MaterialTheme.colorScheme.background
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    val circleRadius = 10.dp.toPx()
+                    
+                    // Left Circle Cutout (uses background color to simulate punch-out)
+                    drawCircle(
+                        color = backgroundColor, 
+                        radius = circleRadius,
+                        center = Offset(0f, size.height / 2)
+                    )
+                    
+                    // Right Circle Cutout
+                    drawCircle(
+                        color = backgroundColor,
+                        radius = circleRadius,
+                        center = Offset(size.width, size.height / 2)
+                    )
+                    
+                    drawLine(
+                        color = Color.LightGray.copy(alpha = 0.5f),
+                        start = Offset(circleRadius + 4.dp.toPx(), size.height / 2),
+                        end = Offset(size.width - circleRadius - 4.dp.toPx(), size.height / 2),
+                        pathEffect = pathEffect,
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+            }
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 16.dp, top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    ticket.dateTime,
+                    "Ticket ID: ${ticket.id}",
                     style = MaterialTheme.typography.labelSmall,
                     color = extendedColors.textSecondary
                 )
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    ticket.fare,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary
+                    "Tap to View Details",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
-                
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (isActive) Color(0xFF10B981).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
-                ) {
-                    Text(
-                        ticket.status,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isActive) Color(0xFF10B981) else Color.Gray
-                    )
-                }
             }
         }
     }
 }
+

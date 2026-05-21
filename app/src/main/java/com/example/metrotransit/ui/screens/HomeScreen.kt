@@ -395,7 +395,7 @@ fun HomeScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("QR Pay", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("QR Ticket", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
