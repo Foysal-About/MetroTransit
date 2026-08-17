@@ -1,5 +1,6 @@
 package com.example.metrotransit.ui.screens
 
+import com.example.metrotransit.ui.theme.AppFont
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -77,6 +78,7 @@ fun PhysicalCardVisual() {
                             "MRT Pass",
                             color = Color(0xFFD32F2F),
                             fontSize = 24.sp,
+                            fontFamily = AppFont.display,
                             fontWeight = FontWeight.Bold
                         )
                         Text(

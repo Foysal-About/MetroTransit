@@ -26,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.R
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 
@@ -169,7 +170,7 @@ fun NagadPaymentScreen(
                                             .background(Color.White, RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                        Text(char, color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = AppFont.display, fontSize = 20.sp)
                                     }
                                 }
                             }
@@ -214,7 +215,7 @@ fun NagadPaymentScreen(
                         NagadStep.SUCCESS -> {
                              Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null, tint = Color.White, modifier = Modifier.size(80.dp))
                              Spacer(modifier = Modifier.height(16.dp))
-                             Text("Payment Successful!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                             Text("Payment Successful!", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = AppFont.display, fontSize = 20.sp)
                         }
                     }
 

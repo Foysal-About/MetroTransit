@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import java.util.Locale
@@ -135,6 +136,7 @@ fun MRTPassRechargeScreen(
                         Text(
                             text = "৳ ${if (selectedAmountStr == "Other") "0" else selectedAmountStr}",
                             fontSize = 48.sp,
+                            fontFamily = AppFont.display,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
@@ -212,6 +214,7 @@ fun MRTPassRechargeScreen(
                             Text(
                                 text = "৳ ${String.format(Locale.US, "%.2f", totalAmount)}",
                                 fontSize = 22.sp,
+                                fontFamily = AppFont.display,
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.primary
                             )

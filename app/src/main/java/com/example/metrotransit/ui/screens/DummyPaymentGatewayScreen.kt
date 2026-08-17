@@ -1,5 +1,6 @@
 package com.example.metrotransit.ui.screens
 
+import com.example.metrotransit.ui.theme.AppFont
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +47,7 @@ fun DummyPaymentGatewayScreen(
                     Text(
                         text = "SSLCommerz",
                         fontSize = 24.sp,
+                        fontFamily = AppFont.display,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFD32F2F)
                     )
@@ -58,7 +60,7 @@ fun DummyPaymentGatewayScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Text(text = "Processing Payment of", fontSize = 16.sp)
-                    Text(text = "\u09f3 $amount", fontSize = 28.sp, fontWeight = FontWeight.Black)
+                    Text(text = "\u09f3 $amount", fontFamily = AppFont.display, fontSize = 28.sp, fontWeight = FontWeight.Black)
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(text = "Redirecting to $paymentMethod secure portal...", fontSize = 12.sp, color = Color.Gray)
@@ -83,6 +85,7 @@ fun DummyPaymentGatewayScreen(
                     Text(
                         text = "Payment Successful",
                         fontSize = 20.sp,
+                        fontFamily = AppFont.display,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2E7D32)
                     )

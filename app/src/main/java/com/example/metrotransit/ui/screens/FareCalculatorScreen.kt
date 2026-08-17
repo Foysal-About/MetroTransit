@@ -20,10 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.data.FareCalculator
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
-import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,8 +132,7 @@ fun FareCalculatorScreen(onBack: () -> Unit) {
                 }
 
                 if (fromStation != null && toStation != null) {
-                    val diff = abs(StationData.stations.indexOf(fromStation) - StationData.stations.indexOf(toStation))
-                    val regularFare = 20 + diff * 5
+                    val regularFare = FareCalculator.fare(fromStation, toStation)
                     val mrtFare = (regularFare * 0.9).toInt()
                     val pwdFare = (regularFare * 0.85).toInt()
 
@@ -344,7 +344,7 @@ fun FareCard(type: String, subtitle: String, amount: Int, modifier: Modifier = M
             Text(type, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Text(subtitle, color = Color.White.copy(alpha = 0.7f), fontSize = 8.sp, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(12.dp))
-            Text("৳$amount", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Black)
+            Text("৳$amount", color = Color.White, fontFamily = AppFont.display, fontSize = 22.sp, fontWeight = FontWeight.Black)
         }
     }
 }

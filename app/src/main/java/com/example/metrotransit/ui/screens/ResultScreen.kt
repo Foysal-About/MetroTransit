@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.metrotransit.data.TrainSchedule
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.ResultViewModel
 
@@ -112,6 +113,7 @@ fun ResultScreen(
                         text = currentTime,
                         color = Color(0xFF39FF14), // Neon Green
                         fontSize = 24.sp,
+                        // Stays monospace — it is a digital clock readout, not body type.
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )

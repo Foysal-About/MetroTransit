@@ -3,16 +3,20 @@ package com.example.metrotransit.ui.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
 import androidx.core.view.WindowCompat
 
 @Immutable
@@ -105,12 +109,23 @@ fun MetroTransitTheme(
         }
     }
 
-    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+    val context = LocalContext.current
+    val fonts = remember(context) { appFontFamilies(context) }
+    val typography = remember(fonts) { appTypography(fonts.display, fonts.text) }
+
+    CompositionLocalProvider(
+        LocalExtendedColors provides extendedColors,
+        LocalAppFonts provides fonts
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
-            content = content
-        )
+            typography = typography
+        ) {
+            // Carries the family — and nothing else — into `Text` calls that pass a raw
+            // fontSize instead of a typography style, so the switch reaches every screen
+            // without altering a single size, weight or spacing value.
+            ProvideTextStyle(TextStyle(fontFamily = fonts.text), content)
+        }
     }
 }
 
@@ -118,4 +133,8 @@ object MetroTransitTheme {
     val extendedColors: ExtendedColors
         @Composable
         get() = LocalExtendedColors.current
+
+    val fonts: AppFontFamilies
+        @Composable
+        get() = LocalAppFonts.current
 }

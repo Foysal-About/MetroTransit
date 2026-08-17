@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -92,10 +91,10 @@ fun MyTicketsScreen(
 @Composable
 fun TicketCard(ticket: QRTicket, onClick: () -> Unit) {
     val extendedColors = MetroTransitTheme.extendedColors
-    val isActive = ticket.status == "Active"
-    val statusColor = if (isActive) Color(0xFF10B981) else extendedColors.textSecondary
-    val statusBgColor = if (isActive) Color(0xFFD1FAE5) else MaterialTheme.colorScheme.surfaceVariant
-    
+    val statusStyle = ticketStatusStyle(ticket.status)
+    val statusColor = statusStyle.content
+    val statusBgColor = statusStyle.container
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,7 +115,7 @@ fun TicketCard(ticket: QRTicket, onClick: () -> Unit) {
                     modifier = Modifier.size(52.dp)
                 ) {
                     Icon(
-                        Icons.Default.QrCode,
+                        statusStyle.icon,
                         contentDescription = null,
                         tint = statusColor,
                         modifier = Modifier.padding(12.dp)

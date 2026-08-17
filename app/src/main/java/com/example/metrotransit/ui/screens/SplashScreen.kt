@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroGreen
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
@@ -61,6 +62,7 @@ fun SplashScreen(onNavigateToHome: () -> Unit) {
             Text(
                 text = "MetroTransit BD",
                 fontSize = 32.sp,
+                fontFamily = AppFont.display,
                 fontWeight = FontWeight.Bold,
                 color = extendedColors.textPrimary
             )

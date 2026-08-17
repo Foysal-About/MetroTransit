@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 
@@ -211,7 +212,7 @@ fun CardSummaryBottomBar(amount: String) {
             "৳ $amount",
             color = extendedColors.textPrimary,
             fontWeight = FontWeight.Black,
-            fontSize = 20.sp
+            fontFamily = AppFont.display, fontSize = 20.sp
         )
     }
 }

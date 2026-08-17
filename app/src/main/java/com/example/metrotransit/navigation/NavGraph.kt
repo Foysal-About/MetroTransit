@@ -1,13 +1,23 @@
 package com.example.metrotransit.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.metrotransit.ui.screens.*
+import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import com.example.metrotransit.viewmodel.TicketViewModel
@@ -52,6 +62,11 @@ sealed class Screen(val route: String) {
     object TicketDetails : Screen("ticket_details/{ticketId}") {
         fun createRoute(ticketId: String) = "ticket_details/$ticketId"
     }
+    object Journey : Screen("journey/{ticketId}?exit={exit}") {
+        /** [openExitGate] makes the screen bring up the exit-gate QR straight away. */
+        fun createRoute(ticketId: String, openExitGate: Boolean = false) =
+            "journey/$ticketId?exit=$openExitGate"
+    }
 }
 
 @Composable
@@ -62,6 +77,58 @@ fun NavGraph(
     val mrtPassViewModel: MRTPassViewModel = viewModel()
     val ticketViewModel: TicketViewModel = viewModel()
 
+    // A validated ticket means the rider is inside the paid area and still owes a tap-out,
+    // so the journey bar rides along on top of every screen until that happens.
+    val activeJourney = ticketViewModel.tickets.firstOrNull { it.isInTransit }
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val onJourneyScreen = currentRoute?.startsWith("journey/") == true
+    val showJourneyBar = activeJourney != null && currentRoute != Screen.Splash.route
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MetroTransitTheme.extendedColors.backgroundGradient)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = if (showJourneyBar) ActiveJourneyBarHeight else 0.dp)
+        ) {
+            TicketNavHost(
+                navController = navController,
+                homeViewModel = homeViewModel,
+                mrtPassViewModel = mrtPassViewModel,
+                ticketViewModel = ticketViewModel
+            )
+        }
+
+        if (activeJourney != null && showJourneyBar) {
+            ActiveJourneyBar(
+                ticket = activeJourney,
+                onTapOut = {
+                    navController.navigate(
+                        Screen.Journey.createRoute(activeJourney.id, openExitGate = true)
+                    )
+                },
+                // On the journey screen itself there is nothing to open.
+                onOpenJourney = if (onJourneyScreen) null else {
+                    { navController.navigate(Screen.Journey.createRoute(activeJourney.id)) }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+            )
+        }
+    }
+}
+
+@Composable
+private fun TicketNavHost(
+    navController: NavHostController,
+    homeViewModel: HomeViewModel,
+    mrtPassViewModel: MRTPassViewModel,
+    ticketViewModel: TicketViewModel
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route
@@ -339,14 +406,11 @@ fun NavGraph(
                     navController.navigate(Screen.TicketDetails.createRoute(ticketId))
                 },
                 onPaymentSuccess = {
-                    val from = StationData.stations.find { it.id == fromId }?.name ?: "Unknown"
-                    val to = StationData.stations.find { it.id == toId }?.name ?: "Unknown"
-                    val diff = kotlin.math.abs(StationData.stations.indexOfFirst { it.id == fromId } - StationData.stations.indexOfFirst { it.id == toId })
-                    val fare = "৳${20 + diff * 5}"
-                    
-                    ticketViewModel.addTicket(from, to, fare)
-                    val newTicket = ticketViewModel.tickets.first()
-                    
+                    val newTicket = ticketViewModel.addTicket(
+                        from = StationData.stations.find { it.id == fromId },
+                        to = StationData.stations.find { it.id == toId }
+                    )
+
                     navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {
                         popUpTo(Screen.Home.route)
                     }
@@ -375,6 +439,46 @@ fun NavGraph(
                     ticket = ticket,
                     onBack = { navController.popBackStack() },
                     onClose = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    },
+                    onValidate = {
+                        // Gate reader accepted the QR — the rider is now inside the station.
+                        ticketViewModel.validateTicket(ticketId)
+                        navController.navigate(Screen.Journey.createRoute(ticketId))
+                    },
+                    onOpenJourney = {
+                        navController.navigate(Screen.Journey.createRoute(ticketId))
+                    },
+                    onEntryWindowLapsed = { ticketViewModel.expireTicket(ticketId) }
+                )
+            }
+        }
+
+        composable(
+            route = Screen.Journey.route,
+            arguments = listOf(
+                navArgument("ticketId") { type = NavType.StringType },
+                navArgument("exit") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""
+            val openExitGate = backStackEntry.arguments?.getBoolean("exit") ?: false
+            val ticket = ticketViewModel.tickets.find { it.id == ticketId }
+            if (ticket != null) {
+                JourneyScreen(
+                    ticket = ticket,
+                    openExitGateOnLaunch = openExitGate,
+                    onBack = { navController.popBackStack() },
+                    onExtendJourney = { station, paymentMethod ->
+                        ticketViewModel.extendJourney(ticketId, station, paymentMethod)
+                    },
+                    onCompleteJourney = { ticketViewModel.completeJourney(ticketId) },
+                    onFinish = {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }

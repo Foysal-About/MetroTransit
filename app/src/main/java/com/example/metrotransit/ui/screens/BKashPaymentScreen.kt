@@ -26,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.R
+import com.example.metrotransit.ui.theme.AppFont
 import kotlinx.coroutines.delay
 
 enum class BKashStep {
@@ -245,6 +246,7 @@ fun BKashPaymentScreen(
                                 "Payment Successful!",
                                 color = Color.White,
                                 fontSize = 20.sp,
+                                fontFamily = AppFont.display,
                                 fontWeight = FontWeight.Bold
                             )
                         }

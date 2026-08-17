@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.MRTPassCard
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import kotlinx.coroutines.launch
@@ -83,6 +84,7 @@ fun MRTPassDashboardScreen(
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 22.sp,
+                            fontFamily = AppFont.display,
                             letterSpacing = 0.5.sp
                         )
                         Text(
@@ -169,6 +171,7 @@ fun MRTPassDashboardScreen(
                         Text(
                             "My Dashboard",
                             fontSize = 20.sp,
+                            fontFamily = AppFont.display,
                             fontWeight = FontWeight.Bold,
                             color = extendedColors.textPrimary
                         )

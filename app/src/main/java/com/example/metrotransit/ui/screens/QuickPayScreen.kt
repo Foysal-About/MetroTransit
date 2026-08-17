@@ -27,11 +27,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.example.metrotransit.R
+import com.example.metrotransit.data.FareCalculator
 import com.example.metrotransit.data.StationData
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.TicketViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,9 +124,8 @@ fun BuyTicketContent(
     val scrollState = rememberScrollState()
     val extendedColors = MetroTransitTheme.extendedColors
     
-    val diff = abs(StationData.stations.indexOf(fromStation) - StationData.stations.indexOf(toStation))
-    val amount = 20 + (diff * 5)
-    
+    val amount = FareCalculator.fare(fromStation, toStation)
+
     var selectedPaymentMethod by remember { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
 
@@ -179,7 +179,7 @@ fun BuyTicketContent(
                 ) {
                     Column {
                         Text("Fare Amount", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                        Text("৳$amount", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Black)
+                        Text("৳$amount", color = Color.White, fontFamily = AppFont.display, fontSize = 32.sp, fontWeight = FontWeight.Black)
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Surface(

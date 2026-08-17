@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.metrotransit.data.RechargeTransaction
+import com.example.metrotransit.ui.theme.AppFont
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 
@@ -38,6 +39,7 @@ fun RechargeHistoryScreen(
                     Text(
                         "Recharge History", 
                         fontSize = 20.sp, 
+                        fontFamily = AppFont.display,
                         fontWeight = FontWeight.ExtraBold,
                         color = extendedColors.textPrimary
                     ) 
@@ -115,6 +117,7 @@ fun RechargeHistoryItem(transaction: RechargeTransaction) {
                 Text(
                     text = "৳ ${transaction.amount}",
                     fontSize = 22.sp,
+                    fontFamily = AppFont.display,
                     fontWeight = FontWeight.Black,
                     color = extendedColors.textPrimary
                 )
