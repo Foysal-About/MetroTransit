@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -21,10 +23,12 @@ import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import com.example.metrotransit.viewmodel.TicketViewModel
+import com.example.metrotransit.data.AppPreferences
 import com.example.metrotransit.data.StationData
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
+    object Onboarding : Screen("onboarding")
     object Home : Screen("home")
     object Result : Screen("result/{fromId}/{toId}") {
         fun createRoute(fromId: Int, toId: Int) = "result/$fromId/$toId"
@@ -134,9 +138,26 @@ private fun TicketNavHost(
         startDestination = Screen.Splash.route
     ) {
         composable(Screen.Splash.route) {
+            val context = LocalContext.current
+            val preferences = remember { AppPreferences(context) }
             SplashScreen(onNavigateToHome = {
-                navController.navigate(Screen.Home.route) {
+                // Welcome page on the first launch only; straight to the dashboard after.
+                val next =
+                    if (preferences.hasSeenOnboarding) Screen.Home.route
+                    else Screen.Onboarding.route
+                navController.navigate(next) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
+                }
+            })
+        }
+
+        composable(Screen.Onboarding.route) {
+            val context = LocalContext.current
+            val preferences = remember { AppPreferences(context) }
+            OnboardingScreen(onContinue = {
+                preferences.hasSeenOnboarding = true
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Onboarding.route) { inclusive = true }
                 }
             })
         }
