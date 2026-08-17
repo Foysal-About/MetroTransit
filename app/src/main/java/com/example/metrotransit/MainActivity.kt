@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.example.metrotransit.navigation.NavGraph
 import com.example.metrotransit.ui.theme.MetroTransitTheme
@@ -36,7 +37,8 @@ class MainActivity : ComponentActivity() {
 
             MetroTransitTheme(darkTheme = darkTheme) {
                 Surface(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.Transparent
                 ) {
                     val navController = rememberNavController()
                     NavGraph(

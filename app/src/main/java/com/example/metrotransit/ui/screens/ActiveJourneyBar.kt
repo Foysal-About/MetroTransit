@@ -5,10 +5,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,8 +51,7 @@ val ActiveJourneyBarHeight = 76.dp
 
 /**
  * Persistent reminder that a journey is running, shown over every screen until the rider
- * taps out. Validating a QR means they are inside the paid area and *must* tap out to
- * leave, so the action stays one tap away no matter where they wander in the app.
+ * taps out. Validating a QR means they are inside the paid area and must tap out to leave.
  */
 @Composable
 fun ActiveJourneyBar(
@@ -62,19 +63,26 @@ fun ActiveJourneyBar(
     val extendedColors = MetroTransitTheme.extendedColors
 
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
     LaunchedEffect(ticket.id) {
         while (true) {
             nowMillis = System.currentTimeMillis()
             delay(1000)
         }
     }
+
     val secondsLeft = ticket.remainingSeconds(nowMillis)
     val overdue = secondsLeft <= 0
 
-    val pulse by rememberInfiniteTransition(label = "journeyPulse").animateFloat(
+    val pulse by rememberInfiniteTransition(
+        label = "journeyPulse"
+    ).animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(1100), repeatMode = RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100),
+            repeatMode = RepeatMode.Reverse
+        ),
         label = "journeyPulseAlpha"
     )
 
@@ -83,23 +91,54 @@ fun ActiveJourneyBar(
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .height(ActiveJourneyBarHeight)
-            .then(if (onOpenJourney != null) Modifier.clickable { onOpenJourney() } else Modifier),
+            .then(
+                if (onOpenJourney != null) {
+                    Modifier.clickable {
+                        onOpenJourney()
+                    }
+                } else {
+                    Modifier
+                }
+            ),
+
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 12.dp
+
+        // Glass effect instead of pure transparent to avoid M3 shadow issues
+        color = extendedColors.glass,
+
+        border = BorderStroke(
+            width = 1.dp,
+            color = extendedColors.glassBorder.copy(alpha = 0.35f)
+        ),
+
+        // Keep a subtle shadow
+        shadowElevation = 6.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(ActiveJourneyBarHeight)
+                .padding(horizontal = 14.dp),
+
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+
+            // Subway icon
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(40.dp)
+            ) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(TicketAmber.copy(alpha = pulse * 0.25f), CircleShape)
+                        .background(
+                            color = TicketAmber.copy(alpha = pulse * 0.25f),
+                            shape = CircleShape
+                        )
                 )
+
                 Icon(
-                    Icons.Default.DirectionsSubway,
+                    imageVector = Icons.Default.DirectionsSubway,
                     contentDescription = null,
                     tint = TicketAmber,
                     modifier = Modifier.size(20.dp)
@@ -108,31 +147,51 @@ fun ActiveJourneyBar(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            // Journey information
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
                     Text(
-                        "IN TRANSIT",
+                        text = "IN TRANSIT",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Black,
                         color = TicketAmber,
                         fontSize = 9.sp
                     )
+
                     Text(
-                        " · ",
+                        text = " · ",
                         style = MaterialTheme.typography.labelSmall,
                         color = extendedColors.textSecondary,
                         fontSize = 9.sp
                     )
+
                     Text(
-                        if (overdue) "exit window over" else "${formatCountdown(secondsLeft)} to exit",
+                        text = if (overdue) {
+                            "exit window over"
+                        } else {
+                            "${formatCountdown(secondsLeft)} to exit"
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (overdue) MaterialTheme.colorScheme.error else extendedColors.textSecondary,
+                        color = if (overdue) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            extendedColors.textSecondary
+                        },
                         fontSize = 9.sp
                     )
                 }
+
+                Spacer(modifier = Modifier.height(3.dp))
+
                 Text(
-                    "${ticket.fromStation} → ${ticket.toStation}",
+                    text = "${ticket.fromStation} → ${ticket.toStation}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = extendedColors.textPrimary,
@@ -143,25 +202,41 @@ fun ActiveJourneyBar(
 
             Spacer(modifier = Modifier.width(10.dp))
 
+            // Tap Out button
             Button(
                 onClick = onTapOut,
+
                 modifier = Modifier.height(44.dp),
+
                 shape = RoundedCornerShape(14.dp),
+
                 contentPadding = PaddingValuesCompact,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Icon(
-                    Icons.Default.QrCodeScanner,
+                    imageVector = Icons.Default.QrCodeScanner,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )
+
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Tap Out", fontWeight = FontWeight.Bold, color = Color.White)
+
+                Text(
+                    text = "Tap Out",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
     }
 }
 
 private val PaddingValuesCompact =
-    androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    PaddingValues(
+        horizontal = 16.dp,
+        vertical = 8.dp
+    )

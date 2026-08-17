@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -91,12 +92,12 @@ fun NavGraph(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MetroTransitTheme.extendedColors.backgroundGradient)
+            .background(Color.Transparent)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (showJourneyBar) ActiveJourneyBarHeight else 0.dp)
+                .background(Color.Transparent)
         ) {
             TicketNavHost(
                 navController = navController,
@@ -120,7 +121,8 @@ fun NavGraph(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
+                    .background(Color.Transparent)
+                    .padding(bottom = 16.dp)
             )
         }
     }
