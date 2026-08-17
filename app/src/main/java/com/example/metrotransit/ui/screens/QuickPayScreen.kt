@@ -140,6 +140,7 @@ fun BuyTicketContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
+            .padding(bottom = LocalJourneyBarInset.current)
     ) {
         // ── Trip Summary Card ──────────────────────────────────────
         Surface(
@@ -309,7 +310,12 @@ fun MyTicketsContent(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp + LocalJourneyBarInset.current
+                ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(viewModel.tickets) { ticket ->

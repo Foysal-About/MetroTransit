@@ -73,6 +73,9 @@ fun ResultScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .background(Color.Black)
+                // Nothing scrolls here — the pay button is pinned — so the whole page steps
+                // up out of the way of an active journey bar.
+                .padding(bottom = LocalJourneyBarInset.current)
         ) {
             // Header Info Bar
             Row(

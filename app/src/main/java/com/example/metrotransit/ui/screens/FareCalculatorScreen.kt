@@ -61,6 +61,7 @@ fun FareCalculatorScreen(onBack: () -> Unit) {
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
+                    .padding(bottom = LocalJourneyBarInset.current)
             ) {
                 // ── Header (Web style from image) ──────────────────────────────
                 Box(

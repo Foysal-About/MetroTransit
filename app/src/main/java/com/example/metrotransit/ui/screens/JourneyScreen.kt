@@ -212,6 +212,7 @@ fun JourneyScreen(
                     .padding(padding)
                     .verticalScroll(scrollState)
                     .padding(horizontal = 16.dp)
+                    .padding(bottom = LocalJourneyBarInset.current)
             ) {
                 LiveStatusCard(
                     ticket = ticket,

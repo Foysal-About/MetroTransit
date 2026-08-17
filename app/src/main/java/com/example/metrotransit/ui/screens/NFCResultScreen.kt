@@ -58,7 +58,8 @@ fun NFCResultScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .padding(bottom = LocalJourneyBarInset.current),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 

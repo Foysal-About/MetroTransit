@@ -31,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +49,17 @@ import kotlinx.coroutines.delay
 
 /** Height the bar occupies, excluding system insets — screens reserve this much space. */
 val ActiveJourneyBarHeight = 76.dp
+
+/** The gap the bar floats on, between it and the bottom of the screen. */
+val ActiveJourneyBarGap = 16.dp
+
+/**
+ * Room a scrolling screen leaves at the bottom of its content while the bar floats over it,
+ * so the last card can still be scrolled clear of the bar instead of sitting under it. Zero
+ * when no journey is running. Read it rather than hard-coding the bar's size: the bar can
+ * change height without every screen needing to hear about it.
+ */
+val LocalJourneyBarInset = compositionLocalOf { 0.dp }
 
 /**
  * Persistent reminder that a journey is running, shown over every screen until the rider
@@ -110,9 +122,6 @@ fun ActiveJourneyBar(
             width = 1.dp,
             color = extendedColors.glassBorder.copy(alpha = 0.35f)
         ),
-
-        // Keep a subtle shadow
-        shadowElevation = 6.dp
     ) {
         Row(
             modifier = Modifier

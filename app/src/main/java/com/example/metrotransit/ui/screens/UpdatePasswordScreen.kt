@@ -82,7 +82,8 @@ fun UpdatePasswordScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .padding(bottom = LocalJourneyBarInset.current),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Form Container (Glass Surface)

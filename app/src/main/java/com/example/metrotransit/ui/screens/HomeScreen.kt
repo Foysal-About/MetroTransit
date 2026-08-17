@@ -207,6 +207,8 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
+                    // Inside the scroll, so an active journey bar can be scrolled clear of.
+                    .padding(bottom = LocalJourneyBarInset.current)
             ) {
                 // ── Station selector card (Glass Effect) ──────────────────────
                 Box(

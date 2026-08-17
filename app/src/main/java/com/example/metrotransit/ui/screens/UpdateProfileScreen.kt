@@ -84,7 +84,8 @@ fun UpdateProfileScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .padding(bottom = LocalJourneyBarInset.current),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Profile Image Section

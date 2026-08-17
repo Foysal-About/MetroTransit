@@ -91,6 +91,7 @@ fun CardPaymentScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
+                    .padding(bottom = LocalJourneyBarInset.current)
             ) {
                 // Info Banner
                 Surface(

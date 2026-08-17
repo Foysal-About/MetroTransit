@@ -86,7 +86,8 @@ fun MRTPassRechargeScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(20.dp),
+                    .padding(20.dp)
+                    .padding(bottom = LocalJourneyBarInset.current),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Info Card (Glass)

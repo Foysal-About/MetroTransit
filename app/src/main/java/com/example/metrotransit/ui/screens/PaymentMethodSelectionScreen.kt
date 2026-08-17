@@ -59,6 +59,7 @@ fun PaymentMethodSelectionScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
+                    .padding(bottom = LocalJourneyBarInset.current)
             ) {
                 // Voucher Banner (Glass variant)
                 Surface(

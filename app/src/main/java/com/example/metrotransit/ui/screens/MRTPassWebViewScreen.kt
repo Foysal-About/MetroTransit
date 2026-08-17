@@ -28,7 +28,13 @@ fun MRTPassWebViewScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                // The page scrolls itself, so keep its viewport clear of the journey bar.
+                .padding(bottom = LocalJourneyBarInset.current)
+                .fillMaxSize()
+        ) {
             AndroidView(
                 factory = { context ->
                     WebView(context).apply {

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,17 +95,28 @@ fun NavGraph(
             .fillMaxSize()
             .background(Color.Transparent)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Transparent)
+        // The bar floats over the screens instead of shrinking them, so rather than padding
+        // the host, tell the screens how much room to leave at the end of their scrolling
+        // content — their last card can then be scrolled out from under the bar.
+        CompositionLocalProvider(
+            LocalJourneyBarInset provides if (showJourneyBar) {
+                ActiveJourneyBarHeight + ActiveJourneyBarGap
+            } else {
+                0.dp
+            }
         ) {
-            TicketNavHost(
-                navController = navController,
-                homeViewModel = homeViewModel,
-                mrtPassViewModel = mrtPassViewModel,
-                ticketViewModel = ticketViewModel
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent)
+            ) {
+                TicketNavHost(
+                    navController = navController,
+                    homeViewModel = homeViewModel,
+                    mrtPassViewModel = mrtPassViewModel,
+                    ticketViewModel = ticketViewModel
+                )
+            }
         }
 
         if (activeJourney != null && showJourneyBar) {
@@ -122,7 +134,7 @@ fun NavGraph(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .background(Color.Transparent)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = ActiveJourneyBarGap)
             )
         }
     }
