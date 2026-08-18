@@ -8,7 +8,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -106,11 +105,11 @@ fun TicketDetailsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ── Ticket Card ──────────────────────────────────────────
-                Surface(
+                LiquidGlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 8.dp
+                    cornerRadius = 32.dp,
+                    // The perforation halfway down bites real holes out of this panel.
+                    punchable = true
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
@@ -193,23 +192,12 @@ fun TicketDetailsScreen(
                                 .height(40.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            val cutoutColor = MaterialTheme.colorScheme.background
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 val pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
 
-                                // Left Cutout
-                                drawCircle(
-                                    color = cutoutColor,
-                                    radius = 12.dp.toPx(),
-                                    center = Offset(-24.dp.toPx(), size.height / 2)
-                                )
-
-                                // Right Cutout
-                                drawCircle(
-                                    color = cutoutColor,
-                                    radius = 12.dp.toPx(),
-                                    center = Offset(size.width + 24.dp.toPx(), size.height / 2)
-                                )
+                                // The divider sits inside the card's 24dp padding, so the
+                                // notches have to reach back out to the panel's edges.
+                                drawGlassNotches(radius = 12.dp, edgeInset = 24.dp)
 
                                 drawLine(
                                     color = extendedColors.textSecondary.copy(alpha = 0.3f),
@@ -248,43 +236,54 @@ fun TicketDetailsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            val timerBgColor =
-                                if (isExpired) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-                                else MaterialTheme.colorScheme.surfaceVariant
                             val timerTextColor = when {
                                 ticket.isCompleted -> MaterialTheme.colorScheme.primary
                                 isExpired || timeLeft < 300 -> MaterialTheme.colorScheme.error
                                 else -> extendedColors.textPrimary
                             }
 
-                            Column(
+                            LiquidGlassSurface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(96.dp)
-                                    .background(timerBgColor, RoundedCornerShape(16.dp)),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                    .height(96.dp),
+                                cornerRadius = 16.dp,
+                                // Glass inside glass: mirrored, weaker light, so the panel
+                                // still separates from the card it sits on.
+                                light = LiquidGlassLight.Inset,
+                                // An expired ticket tints its own glass red rather than
+                                // relying on the countdown text alone.
+                                tint = if (isExpired) {
+                                    MaterialTheme.colorScheme.error.copy(alpha = 0.14f)
+                                } else {
+                                    Color.Unspecified
+                                }
                             ) {
-                                Text(
-                                    when {
-                                        isExpired -> "Ticket Status"
-                                        ticket.isCompleted -> "Journey"
-                                        ticket.isValidated -> "Exit Within"
-                                        else -> "Validate Within"
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = extendedColors.textSecondary
-                                )
-                                Text(
-                                    when {
-                                        isExpired -> "EXPIRED"
-                                        ticket.isCompleted -> "DONE"
-                                        else -> timeString
-                                    },
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Black,
-                                    color = timerTextColor
-                                )
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        when {
+                                            isExpired -> "Ticket Status"
+                                            ticket.isCompleted -> "Journey"
+                                            ticket.isValidated -> "Exit Within"
+                                            else -> "Validate Within"
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = extendedColors.textSecondary
+                                    )
+                                    Text(
+                                        when {
+                                            isExpired -> "EXPIRED"
+                                            ticket.isCompleted -> "DONE"
+                                            else -> timeString
+                                        },
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.Black,
+                                        color = timerTextColor
+                                    )
+                                }
                             }
 
                             GateValidationAction(
@@ -302,15 +301,22 @@ fun TicketDetailsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = { /* Share ticket */ },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))
+                LiquidGlassSurface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    cornerRadius = 16.dp,
+                    onClick = { /* Share ticket */ }
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null, tint = extendedColors.textPrimary)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Share Ticket", color = extendedColors.textPrimary, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = extendedColors.textPrimary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Share Ticket", color = extendedColors.textPrimary, fontWeight = FontWeight.Bold)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -377,17 +383,11 @@ private fun GateValidationAction(
         label = "gatePulseAlpha"
     )
 
-    Surface(
-        modifier = Modifier
-            .width(104.dp)
-            .height(96.dp)
-            .then(if (enabled) Modifier.clickable { if (canValidate) onValidate() else onOpenJourney() } else Modifier),
-        shape = RoundedCornerShape(16.dp),
-        color = container,
-        shadowElevation = if (enabled) 4.dp else 0.dp
-    ) {
+    val body = @Composable {
         Column(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -407,46 +407,71 @@ private fun GateValidationAction(
             )
         }
     }
+
+    val size = Modifier
+        .width(104.dp)
+        .height(96.dp)
+
+    // A live action stays solid: this is the button a rider hunts for at the gate, and glass
+    // would make it recede. Once it is spent, it becomes glass like everything around it.
+    if (enabled) {
+        Surface(
+            modifier = size.clickable { if (canValidate) onValidate() else onOpenJourney() },
+            shape = RoundedCornerShape(16.dp),
+            color = container,
+            shadowElevation = 4.dp,
+            content = body
+        )
+    } else {
+        LiquidGlassSurface(
+            modifier = size,
+            cornerRadius = 16.dp,
+            light = LiquidGlassLight.Inset,
+            content = body
+        )
+    }
 }
 
 /** Shows what the rider added mid-journey, so the fare on the ticket is explainable. */
 @Composable
 private fun ExtensionSummary(ticket: QRTicket) {
     val extendedColors = MetroTransitTheme.extendedColors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.07f), RoundedCornerShape(16.dp))
-            .padding(14.dp)
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 16.dp,
+        light = LiquidGlassLight.Inset,
+        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.AddLocationAlt,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.AddLocationAlt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    "Extended ${ticket.extensions.size}×",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Extended ${ticket.extensions.size}×",
+                "Base fare ${FareCalculator.format(ticket.baseFare)}",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = extendedColors.textSecondary
             )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            "Base fare ${FareCalculator.format(ticket.baseFare)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = extendedColors.textSecondary
-        )
-        ticket.extensions.forEach { extension ->
-            Text(
-                "→ ${extension.toStationName}  +${FareCalculator.format(extension.extraFare)} · ${extension.paymentMethod}",
-                style = MaterialTheme.typography.labelSmall,
-                color = extendedColors.textSecondary,
-                fontSize = 11.sp
-            )
+            ticket.extensions.forEach { extension ->
+                Text(
+                    "→ ${extension.toStationName}  +${FareCalculator.format(extension.extraFare)} · ${extension.paymentMethod}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = extendedColors.textSecondary,
+                    fontSize = 11.sp
+                )
+            }
         }
     }
 }

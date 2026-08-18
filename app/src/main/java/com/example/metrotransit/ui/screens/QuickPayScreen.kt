@@ -2,7 +2,6 @@ package com.example.metrotransit.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.example.metrotransit.R
 import com.example.metrotransit.data.FareCalculator
 import com.example.metrotransit.data.StationData
@@ -143,13 +142,14 @@ fun BuyTicketContent(
             .padding(bottom = LocalJourneyBarInset.current)
     ) {
         // ── Trip Summary Card ──────────────────────────────────────
-        Surface(
+        LiquidGlassSurface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.primary,
-            shadowElevation = 8.dp
+            cornerRadius = 28.dp,
+            // Blue glass rather than a blue slab: the tint stays heavy enough to hold white
+            // text, and the rim and sheen still read through it.
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.82f)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
@@ -230,6 +230,7 @@ fun BuyTicketContent(
                 iconRes = R.drawable.bkash_logo,
                 color = Color(0xFFE2136E),
                 isSelected = selectedPaymentMethod == "bKash",
+                light = liquidGlassLightAt(0),
                 onClick = { selectedPaymentMethod = "bKash" }
             )
             PaymentMethodItem(
@@ -237,6 +238,7 @@ fun BuyTicketContent(
                 iconRes = R.drawable.nagad_logo,
                 color = Color(0xFFED1C24),
                 isSelected = selectedPaymentMethod == "Nagad",
+                light = liquidGlassLightAt(1),
                 onClick = { selectedPaymentMethod = "Nagad" }
             )
             PaymentMethodItem(
@@ -244,6 +246,7 @@ fun BuyTicketContent(
                 icon = Icons.Default.CreditCard,
                 color = Color(0xFF007AFF),
                 isSelected = selectedPaymentMethod == "Card",
+                light = liquidGlassLightAt(2),
                 onClick = { selectedPaymentMethod = "Card" }
             )
         }
@@ -318,8 +321,12 @@ fun MyTicketsContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(viewModel.tickets) { ticket ->
-                    TicketCard(ticket = ticket, onClick = { onTicketClick(ticket.id) })
+                itemsIndexed(viewModel.tickets) { index, ticket ->
+                    TicketCard(
+                        ticket = ticket,
+                        onClick = { onTicketClick(ticket.id) },
+                        light = liquidGlassLightAt(index)
+                    )
                 }
             }
         }
@@ -334,19 +341,23 @@ fun PaymentMethodItem(
     iconRes: Int? = null,
     color: Color,
     isSelected: Boolean,
+    light: LiquidGlassLight = LiquidGlassLight.Panel,
     onClick: () -> Unit
 ) {
     val extendedColors = MetroTransitTheme.extendedColors
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) color.copy(alpha = 0.1f) else extendedColors.glass,
-        border = androidx.compose.foundation.BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) color else extendedColors.glassBorder
-        )
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 20.dp,
+        light = light,
+        // Picking a method tints its glass in the provider's colour and rings it, so the
+        // choice is obvious without breaking the row out of the material.
+        tint = if (isSelected) color.copy(alpha = 0.1f) else Color.Unspecified,
+        border = if (isSelected) {
+            androidx.compose.foundation.BorderStroke(width = 2.dp, color = color)
+        } else {
+            null
+        },
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

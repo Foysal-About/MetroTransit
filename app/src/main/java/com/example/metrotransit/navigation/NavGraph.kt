@@ -57,6 +57,7 @@ sealed class Screen(val route: String) {
     }
     object MRTPassWebView : Screen("mrtpass_webview")
     object FareCalculator : Screen("fare_calculator")
+    object PartnerOffers : Screen("partner_offers")
     object NFCResult : Screen("nfc_result")
     object PaymentGateway : Screen("payment_gateway/{amount}") {
         fun createRoute(amount: String) = "payment_gateway/$amount"
@@ -196,8 +197,15 @@ private fun TicketNavHost(
                 onNavigateToFareCalculator = {
                     navController.navigate(Screen.FareCalculator.route)
                 },
+                onNavigateToPartnerOffers = {
+                    navController.navigate(Screen.PartnerOffers.route)
+                },
                 viewModel = homeViewModel
             )
+        }
+
+        composable(Screen.PartnerOffers.route) {
+            PartnerOffersScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.FareCalculator.route) {

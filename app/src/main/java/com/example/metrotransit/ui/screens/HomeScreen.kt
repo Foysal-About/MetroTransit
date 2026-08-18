@@ -57,6 +57,7 @@ fun HomeScreen(
     onNavigateToMRTPass: () -> Unit,
     onNavigateToNFCResult: () -> Unit,
     onNavigateToFareCalculator: () -> Unit,
+    onNavigateToPartnerOffers: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
@@ -637,13 +638,37 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // ── Advertisements (Horizontally Scrollable) ──────────────────
-                Text(
-                    "Featured Deals",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = extendedColors.textPrimary
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Featured Deals",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Row(
+                        modifier = Modifier.clickable(onClick = onNavigateToPartnerOffers),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "See all",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -663,6 +688,10 @@ fun HomeScreen(
                         AdItem("Foodpanda", "Hungry? Order now and get free delivery to stations!", Color(0xFFFF2B44), Icons.Default.Restaurant),
                         AdItem("Travel Insurance", "Insure your journey for just ৳5 per trip.", Color(0xFF007AFF), Icons.Default.Security)
                     )
+                    // Bank / card-scheme promotions (designed banners)
+                    items(featuredPromos) { promo ->
+                        PromoBannerCard(promo, onClick = onNavigateToPartnerOffers)
+                    }
                     items(ads) { ad ->
                         AdvertisementCard(ad)
                     }
@@ -680,7 +709,7 @@ fun AdvertisementCard(ad: AdItem) {
     Surface(
         modifier = Modifier
             .width(300.dp)
-            .height(140.dp),
+            .height(FEATURED_CARD_HEIGHT),
         shape = RoundedCornerShape(24.dp),
         color = extendedColors.glass,
         border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)

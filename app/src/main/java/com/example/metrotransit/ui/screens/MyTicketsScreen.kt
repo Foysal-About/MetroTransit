@@ -2,10 +2,9 @@ package com.example.metrotransit.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,7 +49,9 @@ fun MyTicketsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                // The gradient the ticket details page already uses. Glass needs something
+                // with depth behind it — on a flat fill the panels have nothing to refract.
+                .background(extendedColors.backgroundGradient)
         ) {
             if (viewModel.tickets.isEmpty()) {
                 Column(
@@ -84,8 +85,12 @@ fun MyTicketsScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(viewModel.tickets) { ticket ->
-                        TicketCard(ticket = ticket, onClick = { onTicketClick(ticket) })
+                    itemsIndexed(viewModel.tickets) { index, ticket ->
+                        TicketCard(
+                            ticket = ticket,
+                            onClick = { onTicketClick(ticket) },
+                            light = liquidGlassLightAt(index)
+                        )
                     }
                 }
             }
@@ -94,19 +99,23 @@ fun MyTicketsScreen(
 }
 
 @Composable
-fun TicketCard(ticket: QRTicket, onClick: () -> Unit) {
+fun TicketCard(
+    ticket: QRTicket,
+    onClick: () -> Unit,
+    light: LiquidGlassLight = LiquidGlassLight.Panel
+) {
     val extendedColors = MetroTransitTheme.extendedColors
     val statusStyle = ticketStatusStyle(ticket.status)
     val statusColor = statusStyle.content
     val statusBgColor = statusStyle.container
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 24.dp,
+        light = light,
+        // The perforation below bites real holes out of this panel.
+        punchable = true,
+        onClick = onClick
     ) {
         Column {
             Row(
@@ -185,36 +194,24 @@ fun TicketCard(ticket: QRTicket, onClick: () -> Unit) {
                 }
             }
             
-            // Dotted Divider with side cutouts
+            // Dotted divider between the stub and the ticket body, notched at both edges.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(20.dp),
                 contentAlignment = Alignment.Center
             ) {
-                val backgroundColor = MaterialTheme.colorScheme.background
+                val dashColor = extendedColors.textSecondary.copy(alpha = 0.35f)
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-                    val circleRadius = 10.dp.toPx()
-                    
-                    // Left Circle Cutout (uses background color to simulate punch-out)
-                    drawCircle(
-                        color = backgroundColor, 
-                        radius = circleRadius,
-                        center = Offset(0f, size.height / 2)
-                    )
-                    
-                    // Right Circle Cutout
-                    drawCircle(
-                        color = backgroundColor,
-                        radius = circleRadius,
-                        center = Offset(size.width, size.height / 2)
-                    )
-                    
+                    val notchRadius = 10.dp
+
+                    drawGlassNotches(radius = notchRadius)
+
                     drawLine(
-                        color = Color.LightGray.copy(alpha = 0.5f),
-                        start = Offset(circleRadius + 4.dp.toPx(), size.height / 2),
-                        end = Offset(size.width - circleRadius - 4.dp.toPx(), size.height / 2),
+                        color = dashColor,
+                        start = Offset(notchRadius.toPx() + 4.dp.toPx(), size.height / 2),
+                        end = Offset(size.width - notchRadius.toPx() - 4.dp.toPx(), size.height / 2),
                         pathEffect = pathEffect,
                         strokeWidth = 1.dp.toPx()
                     )

@@ -1,0 +1,7 @@
+- `[x]` Update `ActiveJourneyBar.kt` to use glass effect (Initial fix)
+- `[x]` Update `NavGraph.kt` to remove background padding and adjust floating bar position (Initial fix)
+- `[x]` Fix white portion at bottom
+    - `[x]` Set `MainActivity` surface to transparent
+    - `[x]` Reduce `shadowElevation` in `ActiveJourneyBar.kt`
+    - `[x]` Verify gradient covers system navigation area
+- `[x]` Final Verification

@@ -1,11 +1,11 @@
 package com.example.metrotransit.ui.screens
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,7 +27,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -86,9 +85,9 @@ fun ActiveJourneyBar(
     val secondsLeft = ticket.remainingSeconds(nowMillis)
     val overdue = secondsLeft <= 0
 
-    val pulse by rememberInfiniteTransition(
-        label = "journeyPulse"
-    ).animateFloat(
+    val transition = rememberInfiniteTransition(label = "journeyPulse")
+
+    val pulse by transition.animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -98,30 +97,68 @@ fun ActiveJourneyBar(
         label = "journeyPulseAlpha"
     )
 
-    Surface(
+    // Drift of the specular band across the bar. Slow on purpose: glass catches light as
+    // the phone moves, it does not strobe.
+    val sheen by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "journeyGlassSheen"
+    )
+
+    // Three light blobs on mismatched periods. Nothing lines up, so the pooled light
+    // keeps rearranging itself instead of visibly looping — that is the liquid part.
+    val flowA by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(6100, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "journeyGlassFlowA"
+    )
+
+    val flowB by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(8300, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "journeyGlassFlowB"
+    )
+
+    val flowC by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(10700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "journeyGlassFlowC"
+    )
+
+    LiquidGlassSurface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .height(ActiveJourneyBarHeight)
-            .then(
-                if (onOpenJourney != null) {
-                    Modifier.clickable {
-                        onOpenJourney()
-                    }
-                } else {
-                    Modifier
-                }
-            ),
+            .height(ActiveJourneyBarHeight),
 
-        shape = RoundedCornerShape(22.dp),
+        cornerRadius = JourneyBarCorner,
 
-        // Glass effect instead of pure transparent to avoid M3 shadow issues
-        color = extendedColors.glass,
-
-        border = BorderStroke(
-            width = 1.dp,
-            color = extendedColors.glassBorder.copy(alpha = 0.35f)
+        // The one animated glass in the app: the panels on the ticket pages hold still, this
+        // one keeps moving because a live journey should look live.
+        light = LiquidGlassLight(
+            flowA = flowA,
+            flowB = flowB,
+            flowC = flowC,
+            sheen = sheen
         ),
+
+        onClick = onOpenJourney
     ) {
         Row(
             modifier = Modifier
@@ -249,3 +286,6 @@ private val PaddingValuesCompact =
         horizontal = 16.dp,
         vertical = 8.dp
     )
+
+/** Slightly tighter than the ticket panels — the bar is a slim strip. */
+private val JourneyBarCorner = 22.dp
