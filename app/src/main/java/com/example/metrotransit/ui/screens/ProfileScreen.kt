@@ -35,13 +35,7 @@ fun ProfileScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        "MRT Portal", 
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = extendedColors.textPrimary
-                        )
-                    ) 
+                    NavTitle("MRT Portal") 
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -50,7 +44,7 @@ fun ProfileScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

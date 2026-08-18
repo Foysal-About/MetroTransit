@@ -54,14 +54,7 @@ fun MRTPassRechargeScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { 
-                    Text(
-                        "Recharge Card", 
-                        fontWeight = FontWeight.Bold, 
-                        color = extendedColors.textPrimary,
-                        fontSize = 18.sp
-                    ) 
-                },
+                title = { NavTitle("Recharge Card") },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (!isBackTriggered) {
@@ -69,7 +62,7 @@ fun MRTPassRechargeScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

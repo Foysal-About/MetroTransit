@@ -36,10 +36,10 @@ fun MyTicketsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("My Tickets", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                title = { NavTitle("My Tickets") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

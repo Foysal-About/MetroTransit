@@ -1,9 +1,12 @@
 package com.example.metrotransit.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,8 +15,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -27,8 +35,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.example.metrotransit.R
 import com.example.metrotransit.data.FareCalculator
+import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.ui.theme.AppFont
+import com.example.metrotransit.ui.theme.MetroSuccess
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.TicketViewModel
 import kotlinx.coroutines.launch
@@ -39,12 +49,19 @@ fun QuickPayScreen(
     fromId: Int,
     toId: Int,
     onBack: () -> Unit,
-    onPaymentSuccess: () -> Unit,
+    /** Carries the stations actually on screen — the rider can change them here. */
+    onPaymentSuccess: (Int, Int) -> Unit,
     ticketViewModel: TicketViewModel? = null,
     onTicketClick: (String) -> Unit = {}
 ) {
-    val fromStation = StationData.stations.find { it.id == fromId }
-    val toStation = StationData.stations.find { it.id == toId }
+    // Seeded from the route, then owned by this screen: the journey can be re-picked from
+    // the summary card without going back to the home page. Held as ids and saved, so a
+    // rotation or a theme switch does not quietly put the original journey back.
+    var fromStationId by rememberSaveable(fromId) { mutableIntStateOf(fromId) }
+    var toStationId by rememberSaveable(toId) { mutableIntStateOf(toId) }
+
+    val fromStation = StationData.stations.find { it.id == fromStationId }
+    val toStation = StationData.stations.find { it.id == toStationId }
     
     val extendedColors = MetroTransitTheme.extendedColors
     val pagerState = rememberPagerState { 2 }
@@ -55,10 +72,10 @@ fun QuickPayScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Ticket Portal", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                    title = { NavTitle("Ticket Portal") },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                            BackIcon()
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -102,6 +119,13 @@ fun QuickPayScreen(
                     0 -> BuyTicketContent(
                         fromStation = fromStation,
                         toStation = toStation,
+                        onFromChange = { fromStationId = it.id },
+                        onToChange = { toStationId = it.id },
+                        onSwap = {
+                            val previousFrom = fromStationId
+                            fromStationId = toStationId
+                            toStationId = previousFrom
+                        },
                         onPaymentSuccess = onPaymentSuccess
                     )
                     1 -> MyTicketsContent(
@@ -116,22 +140,25 @@ fun QuickPayScreen(
 
 @Composable
 fun BuyTicketContent(
-    fromStation: com.example.metrotransit.data.MetroStation?,
-    toStation: com.example.metrotransit.data.MetroStation?,
-    onPaymentSuccess: () -> Unit
+    fromStation: MetroStation?,
+    toStation: MetroStation?,
+    onFromChange: (MetroStation) -> Unit,
+    onToChange: (MetroStation) -> Unit,
+    onSwap: () -> Unit,
+    onPaymentSuccess: (Int, Int) -> Unit
 ) {
     val scrollState = rememberScrollState()
     val extendedColors = MetroTransitTheme.extendedColors
     
     val amount = FareCalculator.fare(fromStation, toStation)
 
-    var selectedPaymentMethod by remember { mutableStateOf<String?>(null) }
+    var selectedPaymentMethod by rememberSaveable { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
 
     LaunchedEffect(isProcessing) {
         if (isProcessing) {
             kotlinx.coroutines.delay(1500)
-            onPaymentSuccess()
+            onPaymentSuccess(fromStation?.id ?: 0, toStation?.id ?: 0)
         }
     }
 
@@ -141,74 +168,14 @@ fun BuyTicketContent(
             .verticalScroll(scrollState)
             .padding(bottom = LocalJourneyBarInset.current)
     ) {
-        // ── Trip Summary Card ──────────────────────────────────────
-        LiquidGlassSurface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            cornerRadius = 28.dp,
-            // Blue glass rather than a blue slab: the tint stays heavy enough to hold white
-            // text, and the rim and sheen still read through it.
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.82f)
-        ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    "Journey Summary",
-                    color = Color.White.copy(alpha = 0.8f),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(fromStation?.name ?: "Unknown", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("Departure", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                    }
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.padding(horizontal = 12.dp))
-                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                        Text(toStation?.name ?: "Unknown", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, textAlign = TextAlign.End)
-                        Text("Destination", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, textAlign = TextAlign.End)
-                    }
-                }
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color.White.copy(alpha = 0.2f))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Column {
-                        Text("Fare Amount", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                        Text("৳$amount", color = Color.White, fontFamily = AppFont.display, fontSize = 32.sp, fontWeight = FontWeight.Black)
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Surface(
-                            color = Color.White.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                "Single Journey",
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                "Next: 4 mins",
-                                color = Color.White.copy(alpha = 0.8f),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        JourneyCard(
+            fromStation = fromStation,
+            toStation = toStation,
+            amount = amount,
+            onFromChange = onFromChange,
+            onToChange = onToChange,
+            onSwap = onSwap
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -222,33 +189,27 @@ fun BuyTicketContent(
         )
 
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            PaymentMethodItem(
-                name = "bKash",
-                iconRes = R.drawable.bkash_logo,
-                color = Color(0xFFE2136E),
-                isSelected = selectedPaymentMethod == "bKash",
-                light = liquidGlassLightAt(0),
-                onClick = { selectedPaymentMethod = "bKash" }
-            )
-            PaymentMethodItem(
-                name = "Nagad",
-                iconRes = R.drawable.nagad_logo,
-                color = Color(0xFFED1C24),
-                isSelected = selectedPaymentMethod == "Nagad",
-                light = liquidGlassLightAt(1),
-                onClick = { selectedPaymentMethod = "Nagad" }
-            )
-            PaymentMethodItem(
-                name = "Debit/Credit Card",
-                icon = Icons.Default.CreditCard,
-                color = Color(0xFF007AFF),
-                isSelected = selectedPaymentMethod == "Card",
-                light = liquidGlassLightAt(2),
-                onClick = { selectedPaymentMethod = "Card" }
-            )
+            PaymentGroupLabel("Mobile wallets")
+            mobileWalletBrands.forEach { brand ->
+                PaymentMethodItem(
+                    brand = brand,
+                    isSelected = selectedPaymentMethod == brand.id,
+                    onClick = { selectedPaymentMethod = brand.id }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
+            PaymentGroupLabel("Cards & banking")
+            cardAndBankBrands.forEach { brand ->
+                PaymentMethodItem(
+                    brand = brand,
+                    isSelected = selectedPaymentMethod == brand.id,
+                    onClick = { selectedPaymentMethod = brand.id }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -334,58 +295,354 @@ fun MyTicketsContent(
 }
 
 
+/**
+ * The journey being paid for: where it starts, where it ends, and what it costs.
+ *
+ * Both ends are pickers rather than labels — a rider who got here with the wrong station
+ * should not have to walk back to the home page to fix it — and the fare below re-reads
+ * itself from whatever the pair currently is.
+ *
+ * The card is built on a 4dp rhythm: [CardPadding] around everything, [SectionGap] between
+ * the journey and the money, and nothing else free-floating.
+ */
+@Composable
+private fun JourneyCard(
+    fromStation: MetroStation?,
+    toStation: MetroStation?,
+    amount: Int,
+    onFromChange: (MetroStation) -> Unit,
+    onToChange: (MetroStation) -> Unit,
+    onSwap: () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    val accent = MaterialTheme.colorScheme.primary
+
+    LiquidGlassSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        cornerRadius = 28.dp,
+        // A wash rather than a fill: the panel keeps its own light and the text underneath
+        // it stays on the theme's own colours, which the old blue slab could not do.
+        tint = accent.copy(alpha = 0.10f)
+    ) {
+        Column(modifier = Modifier.padding(CardPadding)) {
+            // Bottom-aligned so the track runs through the station names rather than
+            // floating up between them and their labels.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                JourneyStationPicker(
+                    label = "From",
+                    station = fromStation,
+                    exclude = toStation,
+                    dotColor = accent,
+                    onSelect = onFromChange,
+                    modifier = Modifier.weight(1f)
+                )
+
+                JourneyDirection(onSwap = onSwap)
+
+                JourneyStationPicker(
+                    label = "To",
+                    station = toStation,
+                    exclude = fromStation,
+                    dotColor = MetroSuccess,
+                    alignEnd = true,
+                    onSelect = onToChange,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(top = SectionGap, bottom = SectionGap),
+                thickness = 0.5.dp,
+                color = extendedColors.glassBorder
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "Fare",
+                        color = extendedColors.textSecondary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Text(
+                        "৳$amount",
+                        color = accent,
+                        fontFamily = AppFont.display,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        color = accent.copy(alpha = 0.12f),
+                        shape = CircleShape
+                    ) {
+                        Text(
+                            "Single Journey",
+                            color = accent,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = extendedColors.textSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "Next: 4 mins",
+                            color = extendedColors.textSecondary,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The card's outer breathing room. */
+private val CardPadding = 20.dp
+
+/** The gap that separates the journey from the money below it. */
+private val SectionGap = 20.dp
+
+/**
+ * The line between the two stations: a dashed track with a train on it, pointing at the
+ * destination so the direction of travel is readable at a glance rather than inferred from
+ * which side the labels are on. Tapping the train turns the journey around.
+ */
+@Composable
+private fun JourneyDirection(onSwap: () -> Unit) {
+    val accent = MaterialTheme.colorScheme.primary
+    val trackColor = accent.copy(alpha = 0.35f)
+
+    Box(
+        modifier = Modifier
+            .width(84.dp)
+            .height(44.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val y = size.height / 2
+            val head = 5.dp.toPx()
+            val end = size.width - head
+
+            drawLine(
+                color = trackColor,
+                start = Offset(2.dp.toPx(), y),
+                end = Offset(end, y),
+                strokeWidth = 1.5.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(
+                    floatArrayOf(3.dp.toPx(), 3.dp.toPx())
+                )
+            )
+
+            // Arrow head, pointing at the destination column.
+            val tip = Offset(size.width, y)
+            drawPath(
+                path = Path().apply {
+                    moveTo(tip.x, tip.y)
+                    lineTo(tip.x - head, tip.y - head * 0.8f)
+                    lineTo(tip.x - head, tip.y + head * 0.8f)
+                    close()
+                },
+                color = trackColor
+            )
+        }
+
+        Surface(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .clickable { onSwap() },
+            shape = CircleShape,
+            color = accent.copy(alpha = 0.14f)
+        ) {
+            Icon(
+                Icons.Default.DirectionsSubway,
+                contentDescription = "Reverse the journey",
+                tint = accent,
+                modifier = Modifier.padding(9.dp)
+            )
+        }
+    }
+}
+
+/**
+ * One end of the journey. Tapping it opens the line, with the station picked at the other
+ * end left out — a ticket from a station to itself is not a journey.
+ */
+@Composable
+private fun JourneyStationPicker(
+    label: String,
+    station: MetroStation?,
+    exclude: MetroStation?,
+    dotColor: Color,
+    onSelect: (MetroStation) -> Unit,
+    modifier: Modifier = Modifier,
+    alignEnd: Boolean = false
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(14.dp))
+                .clickable { expanded = true }
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (!alignEnd) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(dotColor)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+                Text(
+                    label,
+                    color = extendedColors.textSecondary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                if (alignEnd) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(dotColor)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    station?.name ?: "Select",
+                    color = extendedColors.textPrimary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Change $label station",
+                    tint = extendedColors.textSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        MaterialTheme(shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp))) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(extendedColors.surface)
+            ) {
+                StationData.stations
+                    .filter { it.id != exclude?.id }
+                    .forEach { option ->
+                        val isSelected = option.id == station?.id
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    option.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else extendedColors.textPrimary
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Train,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else extendedColors.textSecondary
+                                )
+                            },
+                            onClick = {
+                                onSelect(option)
+                                expanded = false
+                            }
+                        )
+                    }
+            }
+        }
+    }
+}
+
+/** A quiet label over a run of payment rows. */
+@Composable
+fun PaymentGroupLabel(text: String) {
+    Text(
+        text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 1.sp,
+        color = MetroTransitTheme.extendedColors.textSecondary,
+        modifier = Modifier.padding(start = 8.dp, top = 6.dp, bottom = 2.dp)
+    )
+}
+
+/**
+ * One selectable payment method. Every row is the same height with the same tile in the
+ * same place; picking one tints its glass in the provider's colour and rings it, so the
+ * choice is obvious without breaking the row out of the material.
+ *
+ * All rows share one light frame on purpose — the cycling frames used elsewhere make a list
+ * of near-identical rows look smudged rather than varied.
+ */
 @Composable
 fun PaymentMethodItem(
-    name: String,
-    icon: ImageVector? = null,
-    iconRes: Int? = null,
-    color: Color,
+    brand: PaymentBrand,
     isSelected: Boolean,
-    light: LiquidGlassLight = LiquidGlassLight.Panel,
     onClick: () -> Unit
 ) {
     val extendedColors = MetroTransitTheme.extendedColors
     LiquidGlassSurface(
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = 20.dp,
-        light = light,
-        // Picking a method tints its glass in the provider's colour and rings it, so the
-        // choice is obvious without breaking the row out of the material.
-        tint = if (isSelected) color.copy(alpha = 0.1f) else Color.Unspecified,
+        light = LiquidGlassLight.Panel,
+        tint = if (isSelected) brand.color.copy(alpha = 0.1f) else Color.Unspecified,
         border = if (isSelected) {
-            androidx.compose.foundation.BorderStroke(width = 2.dp, color = color)
+            androidx.compose.foundation.BorderStroke(width = 2.dp, color = brand.color)
         } else {
             null
         },
         onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (iconRes != null) Color.Transparent else color.copy(alpha = 0.1f),
-                modifier = Modifier.size(48.dp)
-            ) {
-                if (iconRes != null) {
-                    Image(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = name,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                } else if (icon != null) {
-                    Icon(
-                        icon,
-                        contentDescription = name,
-                        tint = color,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(16.dp))
+            PaymentBrandTile(brand = brand)
+            Spacer(modifier = Modifier.width(14.dp))
             Text(
-                name,
+                brand.name,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = extendedColors.textPrimary,
@@ -394,7 +651,7 @@ fun PaymentMethodItem(
             RadioButton(
                 selected = isSelected,
                 onClick = onClick,
-                colors = RadioButtonDefaults.colors(selectedColor = color)
+                colors = RadioButtonDefaults.colors(selectedColor = brand.color)
             )
         }
     }

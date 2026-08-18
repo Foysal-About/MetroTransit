@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -288,11 +288,7 @@ fun PartnerOffersScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            "Partner Offers",
-                            fontWeight = FontWeight.Bold,
-                            color = extendedColors.textPrimary
-                        )
+                        NavTitle("Partner Offers")
                         Text(
                             "Discounts for metro riders",
                             style = MaterialTheme.typography.labelSmall,
@@ -303,7 +299,7 @@ fun PartnerOffersScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Rounded.ArrowBackIosNew,
                             contentDescription = "Back",
                             tint = extendedColors.textPrimary
                         )

@@ -49,6 +49,7 @@ class MRTPassViewModel : ViewModel() {
         PaymentMethod("Nagad", "Mobile Banking", R.drawable.nagad_logo),
         PaymentMethod("Rocket", "Mobile Banking", R.drawable.rocket_logo),
         PaymentMethod("Upay", "Mobile Banking", R.drawable.upay_logo),
+        PaymentMethod("Internet Banking", "All major banks"),
         PaymentMethod("Visa", "Card"),
         PaymentMethod("Mastercard", "Card"),
     )

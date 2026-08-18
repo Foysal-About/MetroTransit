@@ -39,10 +39,10 @@ fun StationListScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Line-6 Stations", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                title = { NavTitle("Line-6 Stations") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

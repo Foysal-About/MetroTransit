@@ -46,14 +46,10 @@ fun MRTPassLoginScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("MRT Pass Portal", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                title = { NavTitle("MRT Pass Portal") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = extendedColors.textPrimary
-                        )
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

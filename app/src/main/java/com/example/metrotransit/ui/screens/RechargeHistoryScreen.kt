@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,13 +36,7 @@ fun RechargeHistoryScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        "Recharge History", 
-                        fontSize = 20.sp, 
-                        fontFamily = AppFont.display,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = extendedColors.textPrimary
-                    ) 
+                    NavTitle("Recharge History") 
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -52,7 +46,7 @@ fun RechargeHistoryScreen(
                         }
                     }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            Icons.Rounded.ArrowBackIosNew, 
                             contentDescription = "Back",
                             tint = extendedColors.textPrimary
                         )

@@ -19,10 +19,10 @@ fun MRTPassWebViewScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Official MRT Website", fontWeight = FontWeight.Bold) },
+                title = { NavTitle("Official MRT Website", color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        BackIcon(tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             )

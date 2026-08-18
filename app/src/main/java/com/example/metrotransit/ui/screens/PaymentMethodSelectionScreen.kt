@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,7 +95,6 @@ fun PaymentMethodSelectionScreen(
                 SectionHeader("Recommended method(s)")
                 PaymentMethodItem(
                     name = "Credit/Debit Card",
-                    subtitle = "Visa, Mastercard, etc.",
                     showCardLogos = true,
                     onClick = { 
                         onMethodSelected(PaymentMethod("Card", "Card")) 
@@ -123,8 +121,7 @@ fun PaymentMethodSelectionScreen(
                     Column {
                         otherMethods.forEachIndexed { index, method ->
                             PaymentMethodItem(
-                                name = if (method.name.lowercase() == "bkash") "bKash " else method.name,
-                                iconRes = method.iconRes,
+                                name = if (method.name.lowercase() == "bkash") "bKash" else method.name,
                                 isInsideContainer = true,
                                 onClick = { onMethodSelected(method) }
                             )
@@ -171,9 +168,7 @@ fun SectionHeader(title: String) {
 @Composable
 fun PaymentMethodItem(
     name: String,
-    subtitle: String? = null,
     showCardLogos: Boolean = false,
-    iconRes: Int? = null,
     isInsideContainer: Boolean = false,
     onClick: () -> Unit
 ) {
@@ -185,60 +180,18 @@ fun PaymentMethodItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Brand Icon Container
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (iconRes != null) {
-                    Icon(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = name,
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(36.dp)
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = RoundedCornerShape(10.dp),
-                        color = getBrandColor(name).copy(alpha = 0.1f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            val iconText = when {
-                                name.lowercase().contains("bkash") -> "🐦"
-                                name.lowercase().contains("nagad") -> "📦"
-                                name.lowercase().contains("rocket") -> "🚀"
-                                name.lowercase().contains("card") -> "💳"
-                                else -> name.take(1)
-                            }
-                            Text(
-                                iconText,
-                                color = getBrandColor(name),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                        }
-                    }
-                }
-            }
+            // One tile for every mark, whatever the artwork behind it.
+            PaymentBrandTile(brand = paymentBrandFor(name), fallbackName = name)
+
+            Spacer(modifier = Modifier.width(14.dp))
             
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = extendedColors.textPrimary
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = extendedColors.textSecondary
-                    )
-                }
-            }
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = extendedColors.textPrimary,
+                modifier = Modifier.weight(1f)
+            )
 
             if (showCardLogos) {
                 Row(

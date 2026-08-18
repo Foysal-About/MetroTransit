@@ -50,13 +50,7 @@ fun UpdatePasswordScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        "Update Password", 
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = extendedColors.textPrimary
-                        )
-                    ) 
+                    NavTitle("Update Password") 
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -65,7 +59,7 @@ fun UpdatePasswordScreen(
                             onBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

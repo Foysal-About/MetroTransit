@@ -26,7 +26,11 @@ data class ExtendedColors(
     val backgroundGradient: Brush,
     val textPrimary: Color,
     val textSecondary: Color,
-    val surface: Color
+    val surface: Color,
+    /** Accent for MRT Pass surfaces. */
+    val accentPass: Color,
+    /** Accent for the NFC / Metro Buddy surfaces. */
+    val accentNfc: Color
 )
 
 val LocalExtendedColors = staticCompositionLocalOf {
@@ -36,7 +40,9 @@ val LocalExtendedColors = staticCompositionLocalOf {
         backgroundGradient = Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
         textPrimary = Color.Unspecified,
         textSecondary = Color.Unspecified,
-        surface = Color.Unspecified
+        surface = Color.Unspecified,
+        accentPass = Color.Unspecified,
+        accentNfc = Color.Unspecified
     )
 }
 
@@ -82,7 +88,9 @@ fun MetroTransitTheme(
             ),
             textPrimary = DarkTextPrimary,
             textSecondary = DarkTextSecondary,
-            surface = DarkSurface
+            surface = DarkSurface,
+            accentPass = AccentPassDark,
+            accentNfc = AccentNfcDark
         )
     } else {
         ExtendedColors(
@@ -97,7 +105,9 @@ fun MetroTransitTheme(
             ),
             textPrimary = LightTextPrimary,
             textSecondary = LightTextSecondary,
-            surface = LightSurface
+            surface = LightSurface,
+            accentPass = AccentPassLight,
+            accentNfc = AccentNfcLight
         )
     }
 

@@ -41,6 +41,7 @@ import com.airbnb.lottie.compose.*
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.nfc.NfcManager
+import com.example.metrotransit.ui.theme.MetroSuccess
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.google.android.gms.location.LocationServices
@@ -184,10 +185,18 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onViewStations) {
+                    IconButton(
+                        onClick = onViewStations,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    ) {
                         Icon(
                             Icons.Default.ConfirmationNumber,
                             contentDescription = "My Tickets",
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -198,6 +207,10 @@ fun HomeScreen(
             )
         }
     ) { padding ->
+        val routeReady = viewModel.fromStation != null &&
+            viewModel.toStation != null &&
+            viewModel.fromStation!!.id != viewModel.toStation!!.id
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -209,478 +222,228 @@ fun HomeScreen(
                     .padding(padding)
                     .verticalScroll(scrollState)
                     // Inside the scroll, so an active journey bar can be scrolled clear of.
-                    .padding(bottom = LocalJourneyBarInset.current)
+                    .padding(bottom = LocalJourneyBarInset.current),
+                // One rhythm for the whole page. Every block below owns its horizontal
+                // padding only — vertical spacing is the column's job, so nothing drifts.
+                verticalArrangement = Arrangement.spacedBy(HomeSectionSpacing)
             ) {
-                // ── Station selector card (Glass Effect) ──────────────────────
-                Box(
+                // ── Station selector card ─────────────────────────────────────
+                HomePanel(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = HomeGutter)
                 ) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = extendedColors.glass,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                JourneyPoint(
-                                    icon = Icons.Default.MyLocation,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                StationSelector(
-                                    label = "From Station",
-                                    selectedStation = viewModel.fromStation,
-                                    onStationSelected = { viewModel.setFrom(it) },
-                                    modifier = Modifier.weight(1f),
-                                    isLocating = viewModel.isLocating
-                                )
-                                
-                                IconButton(
-                                    onClick = {
-                                        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                                            viewModel.isLocating = true
-                                        } else {
-                                            permissionLauncher.launch(arrayOf(
-                                                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                                android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                            ))
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                ) {
-                                    if (viewModel.isLocating) {
-                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
-                                    } else {
-                                        Icon(
-                                            Icons.Default.MyLocation,
-                                            contentDescription = "Find Nearest",
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            JourneyPoint(
+                                icon = Icons.Default.MyLocation,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            StationSelector(
+                                label = "From Station",
+                                selectedStation = viewModel.fromStation,
+                                onStationSelected = { viewModel.setFrom(it) },
+                                modifier = Modifier.weight(1f),
+                                isLocating = viewModel.isLocating
+                            )
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.height(32.dp)
+                            IconButton(
+                                onClick = {
+                                    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                        viewModel.isLocating = true
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(
+                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        ))
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(26.dp)
-                                        .fillMaxHeight(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .width(2.dp)
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = { 
-                                        viewModel.swapStations()
-                                        rotationAngle += 180f
-                                    },
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(extendedColors.glass)
-                                        .border(1.dp, extendedColors.glassBorder, CircleShape)
-                                ) {
+                                if (viewModel.isLocating) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
+                                } else {
                                     Icon(
-                                        Icons.Default.SwapVert,
-                                        contentDescription = "Swap",
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .graphicsLayer { rotationZ = animatedRotation },
+                                        Icons.Default.MyLocation,
+                                        contentDescription = "Find Nearest",
+                                        modifier = Modifier.size(20.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
+                        }
 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                JourneyPoint(
-                                    icon = Icons.Default.LocationOn,
-                                    color = Color(0xFF10B981)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(26.dp)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .width(2.dp)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                                 )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                StationSelector(
-                                    label = "To Station",
-                                    selectedStation = viewModel.toStation,
-                                    onStationSelected = { viewModel.setTo(it) }
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = {
+                                    viewModel.swapStations()
+                                    rotationAngle += 180f
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                            ) {
+                                Icon(
+                                    Icons.Default.SwapVert,
+                                    contentDescription = "Swap",
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer { rotationZ = animatedRotation },
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // ── Show trains button (Modern Gradient) ───────────────────────
-                Button(
-                    onClick = {
-                        val fromId = viewModel.fromStation?.id ?: 0
-                        val toId   = viewModel.toStation?.id   ?: 0
-                        if (fromId != toId) onShowTrains(fromId, toId)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(64.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.AutoMirrored.Filled.AltRoute, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Find Next Trains", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // ── Pay button ──────────────────────────────────────────────
-                Button(
-                    onClick = {
-                        val fromId = viewModel.fromStation?.id ?: 0
-                        val toId   = viewModel.toStation?.id   ?: 0
-                        if (fromId != toId) onQuickPay(fromId, toId)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(64.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(),
-                    enabled = viewModel.fromStation != null && viewModel.toStation != null && viewModel.fromStation!!.id != viewModel.toStation!!.id
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                if (viewModel.fromStation != null && viewModel.toStation != null && viewModel.fromStation!!.id != viewModel.toStation!!.id)
-                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                        listOf(Color.Black.copy(alpha = 0.9f), Color(0xFF1C1C1E).copy(alpha = 0.9f))
-                                    )
-                                else
-                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                        listOf(Color.Gray.copy(alpha = 0.5f), Color.Gray.copy(alpha = 0.3f))
-                                    )
+                            JourneyPoint(
+                                icon = Icons.Default.LocationOn,
+                                color = MetroSuccess
                             )
-                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("QR Ticket", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-//                Text(
-//                    "Services & Portal",
-//                    modifier = Modifier.padding(horizontal = 24.dp),
-//                    style = MaterialTheme.typography.titleSmall,
-//                    fontWeight = FontWeight.Bold,
-//                    color = extendedColors.textPrimary
-//                )
-//
-//                // ── Info cards (Glass Effect) ──────────────────────────────────
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-//                ) {
-//                    InfoCard(
-//                        title = "Stations",
-//                        value = StationData.stations.size.toString(),
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                    InfoCard(
-//                        title = "Full Journey",
-//                        value = "~35 min",
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                }
-
-                // ── MRT Pass Portal card (Glass Effect) ────────────────────────
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    color = extendedColors.glass,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
-                    onClick = onNavigateToMRTPass
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = Color(0xFF006A4E).copy(alpha = 0.1f),
-                                modifier = Modifier.size(56.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.CreditCard,
-                                    contentDescription = null,
-                                    tint = Color(0xFF006A4E),
-                                    modifier = Modifier.padding(14.dp)
-                                )
-                            }
                             Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    "MRT Pass Portal",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = extendedColors.textPrimary
-                                )
-                                Text(
-                                    "Manage cards & recharges",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = extendedColors.textSecondary
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(extendedColors.textSecondary.copy(alpha = 0.1f))
-                                .padding(vertical = 16.dp, horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            CardFeatureItem(icon = Icons.Default.AccountBalanceWallet, label = "Balance", themeColor = Color(0xFF006A4E))
-                            CardFeatureItem(icon = Icons.Default.AddCard, label = "Recharge", themeColor = Color(0xFF006A4E))
-                            CardFeatureItem(icon = Icons.AutoMirrored.Filled.FactCheck, label = "Status", themeColor = Color(0xFF006A4E))
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Button(
-                            onClick = onNavigateToMRTPass,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006A4E))
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Access Portal", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            StationSelector(
+                                label = "To Station",
+                                selectedStation = viewModel.toStation,
+                                onStationSelected = { viewModel.setTo(it) }
+                            )
                         }
                     }
                 }
 
-                // ── Metro Buddy / NFC card (Glass Effect) ──────────────────────
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    color = extendedColors.glass,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                // ── Journey actions ───────────────────────────────────────────
+                // Both buttons act on the same pair of stations, so they share a state:
+                // neither is offered until a real route is picked.
+                Column(
+                    modifier = Modifier.padding(horizontal = HomeGutter),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = Color(0xFF5E42F3).copy(alpha = 0.1f),
-                                modifier = Modifier.size(56.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Contactless,
-                                    contentDescription = null,
-                                    tint = Color(0xFF5E42F3),
-                                    modifier = Modifier.padding(14.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    "Metro Buddy",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = extendedColors.textPrimary
-                                )
-                                Text(
-                                    "Scan physical card via NFC",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = extendedColors.textSecondary
-                                )
-                            }
+                    HomeActionButton(
+                        text = "Find Next Trains",
+                        icon = Icons.AutoMirrored.Filled.AltRoute,
+                        accent = MaterialTheme.colorScheme.primary,
+                        enabled = routeReady,
+                        onClick = {
+                            onShowTrains(
+                                viewModel.fromStation?.id ?: 0,
+                                viewModel.toStation?.id ?: 0
+                            )
                         }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(extendedColors.textSecondary.copy(alpha = 0.1f))
-                                .padding(vertical = 16.dp, horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            CardFeatureItem(icon = Icons.Default.AccountBalanceWallet, label = "Read Card", themeColor = Color(0xFF5E42F3))
-                            CardFeatureItem(icon = Icons.Default.History, label = "History", themeColor = Color(0xFF5E42F3))
-                            CardFeatureItem(icon = Icons.AutoMirrored.Filled.TrendingUp, label = "Insights", themeColor = Color(0xFF5E42F3))
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Button(
-                            onClick = {
-                                viewModel.resetScan()
-                                viewModel.showScanSheet = true
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5E42F3))
-                        ) {
-                            Icon(Icons.Default.Contactless, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Tap Card to Scan", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                // ── Fare Calculator card (Glass Effect) ──────────────────────
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    color = extendedColors.glass,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
-                    onClick = onNavigateToFareCalculator
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                modifier = Modifier.size(56.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Calculate,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(14.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    "Fare Calculator",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = extendedColors.textPrimary
-                                )
-                                Text(
-                                    "Check timetable & journey fare",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = extendedColors.textSecondary
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Button(
-                            onClick = onNavigateToFareCalculator,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Check Schedule & Fare", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // ── Advertisements (Horizontally Scrollable) ──────────────────
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Featured Deals",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = extendedColors.textPrimary
                     )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Row(
-                        modifier = Modifier.clickable(onClick = onNavigateToPartnerOffers),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+
+                    HomeActionButton(
+                        text = "Buy QR Ticket",
+                        icon = Icons.Default.QrCodeScanner,
+                        accent = MaterialTheme.colorScheme.primary,
+                        style = HomeButtonStyle.Tonal,
+                        enabled = routeReady,
+                        onClick = {
+                            onQuickPay(
+                                viewModel.fromStation?.id ?: 0,
+                                viewModel.toStation?.id ?: 0
+                            )
+                        }
+                    )
+
+                    if (!routeReady) {
                         Text(
-                            "See all",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            "Pick a start and destination station to continue",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = extendedColors.textSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                HomeSectionHeader(title = "Services & Portal")
 
+                // ── MRT Pass Portal ───────────────────────────────────────────
+                ServiceCard(
+                    icon = Icons.Default.CreditCard,
+                    accent = extendedColors.accentPass,
+                    title = "MRT Pass Portal",
+                    subtitle = "Manage cards & recharges",
+                    features = listOf(
+                        Icons.Default.AccountBalanceWallet to "Balance",
+                        Icons.Default.AddCard to "Recharge",
+                        Icons.AutoMirrored.Filled.FactCheck to "Status"
+                    ),
+                    actionText = "Access Portal",
+                    actionIcon = Icons.AutoMirrored.Filled.Login,
+                    onAction = onNavigateToMRTPass
+                )
+
+                // ── Metro Buddy / NFC ─────────────────────────────────────────
+                ServiceCard(
+                    icon = Icons.Default.Contactless,
+                    accent = extendedColors.accentNfc,
+                    title = "Metro Buddy",
+                    subtitle = "Scan physical card via NFC",
+                    features = listOf(
+                        Icons.Default.AccountBalanceWallet to "Read Card",
+                        Icons.Default.History to "History",
+                        Icons.AutoMirrored.Filled.TrendingUp to "Insights"
+                    ),
+                    actionText = "Tap Card to Scan",
+                    actionIcon = Icons.Default.Contactless,
+                    onAction = {
+                        viewModel.resetScan()
+                        viewModel.showScanSheet = true
+                    }
+                )
+
+                // ── Fare Calculator ───────────────────────────────────────────
+                ServiceCard(
+                    icon = Icons.Default.Calculate,
+                    accent = MaterialTheme.colorScheme.primary,
+                    title = "Fare Calculator",
+                    subtitle = "Check timetable & journey fare",
+                    features = emptyList(),
+                    actionText = "Check Schedule & Fare",
+                    actionIcon = Icons.Default.Search,
+                    onAction = onNavigateToFareCalculator
+                )
+
+                HomeSectionHeader(
+                    title = "Featured Deals",
+                    actionText = "See all",
+                    onAction = onNavigateToPartnerOffers
+                )
+
+                // ── Advertisements (horizontally scrollable) ──────────────────
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = HomeGutter),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val ads = listOf(
                         AdItem(
                             title = "১০% ইনস্ট্যান্ট ক্যাশব্যাক",
-                            description = "বিকাশ অ্যাপ দিয়ে পেমেন্ট করলেই অফারটি উপভোগ করুন",
+                            description = "বিকাশ অ্যাপ দিয়ে পেমেন্ট করলেই অফারটি উপভোগ করুন",
                             themeColor = Color(0xFFE2136E),
                             icon = Icons.Default.Payments,
                             imageUrl = "https://www.bkash.com/uploads/images/Campaign-Banner-En.jpg"
@@ -697,8 +460,245 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+}
+
+/** The page gutter. Cards, buttons and headers all start on this line. */
+private val HomeGutter = 16.dp
+
+/** Vertical rhythm between the page's blocks. */
+private val HomeSectionSpacing = 16.dp
+
+/** One corner radius for every card on the page. */
+private val HomeCardCorner = 24.dp
+
+/** Panels nested inside a card, one step tighter so the nesting is legible. */
+private val HomeInnerCorner = 16.dp
+
+/** Buttons: one height and one corner, whatever the card they sit in. */
+private val HomeButtonHeight = 56.dp
+private val HomeButtonCorner = 16.dp
+
+/**
+ * How solid a home surface is. Just short of opaque, so the page's gradient shows through
+ * as a tint and the panels still read as one flat, quiet material.
+ */
+private const val HomePanelAlpha = 0.9f
+
+/**
+ * A plain home panel: one solid-ish fill, one hairline border, no light and no texture.
+ */
+@Composable
+private fun HomePanel(
+    modifier: Modifier = Modifier,
+    cornerRadius: androidx.compose.ui.unit.Dp = HomeCardCorner,
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    Surface(
+        modifier = if (onClick != null) modifier.clickable { onClick() } else modifier,
+        shape = RoundedCornerShape(cornerRadius),
+        color = extendedColors.surface.copy(alpha = HomePanelAlpha),
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
+        content = content
+    )
+}
+
+/** How loudly a [HomeActionButton] speaks. */
+private enum class HomeButtonStyle { Filled, Tonal }
+
+/**
+ * The page's action button: a flat accent fill, or a light tint of the same accent for the
+ * secondary of a pair. Same height, same corner, same type — only the colour changes.
+ */
+@Composable
+private fun HomeActionButton(
+    text: String,
+    icon: ImageVector,
+    accent: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    style: HomeButtonStyle = HomeButtonStyle.Filled
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    val filled = style == HomeButtonStyle.Filled
+
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(HomeButtonHeight),
+        shape = RoundedCornerShape(HomeButtonCorner),
+        elevation = null,
+        border = if (filled) null else androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.35f)),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (filled) accent else accent.copy(alpha = 0.12f),
+            contentColor = if (filled) Color.White else accent,
+            disabledContainerColor = extendedColors.textSecondary.copy(alpha = 0.12f),
+            disabledContentColor = extendedColors.textSecondary.copy(alpha = 0.6f)
+        )
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** The rounded accent tile that heads a card, and the smaller one in a feature strip. */
+@Composable
+private fun HomeIconTile(
+    icon: ImageVector,
+    accent: Color,
+    size: androidx.compose.ui.unit.Dp = 52.dp,
+    cornerRadius: androidx.compose.ui.unit.Dp = 16.dp
+) {
+    Surface(
+        modifier = Modifier.size(size),
+        shape = RoundedCornerShape(cornerRadius),
+        color = accent.copy(alpha = 0.14f)
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.padding(size * 0.27f)
+        )
+    }
+}
+
+/**
+ * A titled break in the page, with an optional trailing action. Using one composable for
+ * both headers keeps "Services & Portal" and "Featured Deals" on the same baseline.
+ *
+ * Named apart from the package's other `SectionHeader` on purpose — a single-argument call
+ * would otherwise resolve to that one and pick up its overline styling.
+ */
+@Composable
+private fun HomeSectionHeader(
+    title: String,
+    actionText: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = HomeGutter + 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = extendedColors.textPrimary
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (actionText != null && onAction != null) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onAction)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    actionText,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One service on the home page: an accented header, an optional strip of what the service
+ * covers, and a single action. Every card on the page is built from this, so they can only
+ * differ in the ways they are meant to — their accent, their words and their light.
+ */
+@Composable
+private fun ServiceCard(
+    icon: ImageVector,
+    accent: Color,
+    title: String,
+    subtitle: String,
+    features: List<Pair<ImageVector, String>>,
+    actionText: String,
+    actionIcon: ImageVector,
+    onAction: () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    HomePanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = HomeGutter),
+        onClick = onAction
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HomeIconTile(icon = icon, accent = accent)
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textPrimary
+                    )
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extendedColors.textSecondary
+                    )
+                }
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = extendedColors.textSecondary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            if (features.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(HomeInnerCorner))
+                        .background(extendedColors.textSecondary.copy(alpha = 0.08f))
+                        .padding(vertical = 14.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    features.forEach { (featureIcon, label) ->
+                        CardFeatureItem(icon = featureIcon, label = label, themeColor = accent)
+                    }
+                }
+            }
+
+            HomeActionButton(
+                text = actionText,
+                icon = actionIcon,
+                accent = accent,
+                onClick = onAction
+            )
         }
     }
 }
@@ -706,13 +706,10 @@ fun HomeScreen(
 @Composable
 fun AdvertisementCard(ad: AdItem) {
     val extendedColors = MetroTransitTheme.extendedColors
-    Surface(
+    HomePanel(
         modifier = Modifier
             .width(300.dp)
-            .height(FEATURED_CARD_HEIGHT),
-        shape = RoundedCornerShape(24.dp),
-        color = extendedColors.glass,
-        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+            .height(FEATURED_CARD_HEIGHT)
     ) {
         if (ad.imageUrl != null) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -748,19 +745,8 @@ fun AdvertisementCard(ad: AdItem) {
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = ad.themeColor.copy(alpha = 0.1f),
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        ad.icon,
-                        contentDescription = null,
-                        tint = ad.themeColor,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                
+                HomeIconTile(icon = ad.icon, accent = ad.themeColor, size = 60.dp)
+
                 Spacer(modifier = Modifier.width(16.dp))
                 
                 Column {
@@ -889,18 +875,7 @@ fun NFCScanBottomSheetContent(
 @Composable
 fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = themeColor,
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.padding(6.dp)
-            )
-        }
+        HomeIconTile(icon = icon, accent = themeColor, size = 36.dp, cornerRadius = 12.dp)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             label,
@@ -915,7 +890,7 @@ fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
 fun JourneyPoint(icon: ImageVector, color: Color) {
     Surface(
         shape = CircleShape,
-        color = color.copy(alpha = 0.1f),
+        color = color.copy(alpha = 0.14f),
         modifier = Modifier.size(26.dp)
     ) {
         Icon(
@@ -971,8 +946,10 @@ fun StationSelector(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
                 disabledContainerColor = Color.Transparent,
+                // Both fields keep a rule under them, so the pair reads as one control —
+                // only its colour says which of the two is open.
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                unfocusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = extendedColors.textSecondary.copy(alpha = 0.22f),
             ),
             textStyle = (if (isLocating) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge).copy(
                 fontWeight = FontWeight.Bold,

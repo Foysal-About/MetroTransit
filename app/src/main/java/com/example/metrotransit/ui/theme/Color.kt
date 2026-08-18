@@ -24,3 +24,14 @@ val DarkTextPrimary = Color(0xFFF1F5F9)
 val DarkTextSecondary = Color(0xFF94A3B8)
 val DarkGlass = Color(0xFF1E293B).copy(alpha = 0.7f)
 val DarkGlassBorder = Color(0xFF334155).copy(alpha = 0.5f)
+
+// Section accents. Every home card carries one of these, and the dark variants are lifted
+// off the brand values — a translucent fill in the true brand green disappears into the
+// navy backdrop, so the dark theme uses a brighter sibling of the same hue.
+val AccentPassLight = MetroGreen
+val AccentPassDark = Color(0xFF12A87C)
+val AccentNfcLight = Color(0xFF5E42F3)
+val AccentNfcDark = Color(0xFF8B7BFF)
+
+/** The "arrived / destination" green, shared by the journey dot and success states. */
+val MetroSuccess = Color(0xFF10B981)

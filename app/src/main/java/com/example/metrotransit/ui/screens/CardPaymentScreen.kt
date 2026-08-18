@@ -43,10 +43,10 @@ fun CardPaymentScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Credit/Debit Card", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = extendedColors.textPrimary) },
+                title = { NavTitle("Credit/Debit Card") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

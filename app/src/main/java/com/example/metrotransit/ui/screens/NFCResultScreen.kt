@@ -36,10 +36,10 @@ fun NFCResultScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Card Details", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                title = { NavTitle("Card Details") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

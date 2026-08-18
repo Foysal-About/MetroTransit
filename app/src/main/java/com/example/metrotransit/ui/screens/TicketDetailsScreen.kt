@@ -75,10 +75,10 @@ fun TicketDetailsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Metro Ticket", fontWeight = FontWeight.Bold) },
+                title = { NavTitle("Metro Ticket", color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        BackIcon(tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {

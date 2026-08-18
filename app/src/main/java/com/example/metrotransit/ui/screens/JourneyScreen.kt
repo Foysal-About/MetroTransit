@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddLocationAlt
@@ -174,10 +174,8 @@ fun JourneyScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            if (ticket.isCompleted) "Journey Complete" else "Journey in Progress",
-                            fontWeight = FontWeight.Bold,
-                            color = extendedColors.textPrimary
+                        NavTitle(
+                            if (ticket.isCompleted) "Journey Complete" else "Journey in Progress"
                         )
                         Text(
                             "Ticket ${ticket.id}",
@@ -189,7 +187,7 @@ fun JourneyScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Rounded.ArrowBackIosNew,
                             contentDescription = "Back",
                             tint = extendedColors.textPrimary
                         )
@@ -1148,27 +1146,13 @@ private fun AddDestinationSheet(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    PaymentMethodItem(
-                        name = "bKash",
-                        iconRes = R.drawable.bkash_logo,
-                        color = Color(0xFFE2136E),
-                        isSelected = selectedMethod == "bKash",
-                        onClick = { if (!isProcessing) selectedMethod = "bKash" }
-                    )
-                    PaymentMethodItem(
-                        name = "Nagad",
-                        iconRes = R.drawable.nagad_logo,
-                        color = Color(0xFFED1C24),
-                        isSelected = selectedMethod == "Nagad",
-                        onClick = { if (!isProcessing) selectedMethod = "Nagad" }
-                    )
-                    PaymentMethodItem(
-                        name = "Debit/Credit Card",
-                        icon = Icons.Default.CreditCard,
-                        color = Color(0xFF007AFF),
-                        isSelected = selectedMethod == "Card",
-                        onClick = { if (!isProcessing) selectedMethod = "Card" }
-                    )
+                    (mobileWalletBrands + cardAndBankBrands).forEach { brand ->
+                        PaymentMethodItem(
+                            brand = brand,
+                            isSelected = selectedMethod == brand.id,
+                            onClick = { if (!isProcessing) selectedMethod = brand.id }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

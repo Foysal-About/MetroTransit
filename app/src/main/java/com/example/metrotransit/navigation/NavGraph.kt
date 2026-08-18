@@ -448,10 +448,10 @@ private fun TicketNavHost(
                 onTicketClick = { ticketId ->
                     navController.navigate(Screen.TicketDetails.createRoute(ticketId))
                 },
-                onPaymentSuccess = {
+                onPaymentSuccess = { paidFromId, paidToId ->
                     val newTicket = ticketViewModel.addTicket(
-                        from = StationData.stations.find { it.id == fromId },
-                        to = StationData.stations.find { it.id == toId }
+                        from = StationData.stations.find { it.id == paidFromId },
+                        to = StationData.stations.find { it.id == paidToId }
                     )
 
                     navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {

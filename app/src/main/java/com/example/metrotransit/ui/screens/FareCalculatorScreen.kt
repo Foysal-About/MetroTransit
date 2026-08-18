@@ -39,10 +39,10 @@ fun FareCalculatorScreen(onBack: () -> Unit) {
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Fare & Timetable", fontWeight = FontWeight.Bold, color = extendedColors.textPrimary) },
+                title = { NavTitle("Fare & Timetable") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = extendedColors.textPrimary)
+                        BackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
