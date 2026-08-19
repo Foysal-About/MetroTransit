@@ -35,3 +35,10 @@ val AccentNfcDark = Color(0xFF8B7BFF)
 
 /** The "arrived / destination" green, shared by the journey dot and success states. */
 val MetroSuccess = Color(0xFF10B981)
+
+/**
+ * MRT Line-6's colour on the official network map (#006747). The dark variant is lifted:
+ * the map green is nearly black against the dark theme's navy.
+ */
+val Line6Light = Color(0xFF006747)
+val Line6Dark = Color(0xFF19B37B)

@@ -30,7 +30,9 @@ data class ExtendedColors(
     /** Accent for MRT Pass surfaces. */
     val accentPass: Color,
     /** Accent for the NFC / Metro Buddy surfaces. */
-    val accentNfc: Color
+    val accentNfc: Color,
+    /** MRT Line-6's own colour, for anything that stands for the line itself. */
+    val line6: Color
 )
 
 val LocalExtendedColors = staticCompositionLocalOf {
@@ -42,7 +44,8 @@ val LocalExtendedColors = staticCompositionLocalOf {
         textSecondary = Color.Unspecified,
         surface = Color.Unspecified,
         accentPass = Color.Unspecified,
-        accentNfc = Color.Unspecified
+        accentNfc = Color.Unspecified,
+        line6 = Color.Unspecified
     )
 }
 
@@ -90,7 +93,8 @@ fun MetroTransitTheme(
             textSecondary = DarkTextSecondary,
             surface = DarkSurface,
             accentPass = AccentPassDark,
-            accentNfc = AccentNfcDark
+            accentNfc = AccentNfcDark,
+            line6 = Line6Dark
         )
     } else {
         ExtendedColors(
@@ -107,7 +111,8 @@ fun MetroTransitTheme(
             textSecondary = LightTextSecondary,
             surface = LightSurface,
             accentPass = AccentPassLight,
-            accentNfc = AccentNfcLight
+            accentNfc = AccentNfcLight,
+            line6 = Line6Light
         )
     }
 

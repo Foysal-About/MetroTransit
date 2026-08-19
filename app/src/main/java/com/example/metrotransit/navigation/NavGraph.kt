@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -126,11 +128,16 @@ fun NavGraph(
                 onTapOut = {
                     navController.navigate(
                         Screen.Journey.createRoute(activeJourney.id, openExitGate = true)
-                    )
+                    ) {
+                        // Tapping out from the journey screen itself would otherwise stack a
+                        // second copy of it behind the first — same screen, different flag.
+                        popUpTo(Screen.Journey.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 },
                 // On the journey screen itself there is nothing to open.
                 onOpenJourney = if (onJourneyScreen) null else {
-                    { navController.navigate(Screen.Journey.createRoute(activeJourney.id)) }
+                    { navController.navigate(Screen.Journey.createRoute(activeJourney.id)) { launchSingleTop = true } }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -138,6 +145,22 @@ fun NavGraph(
                     .padding(bottom = ActiveJourneyBarGap)
             )
         }
+    }
+}
+
+/**
+ * Back, at most once per screen.
+ *
+ * `popBackStack()` acts on the stack, not on the screen that asked — so a second tap landing
+ * while the first pop is still animating takes a second screen with it. One level deep that
+ * means the app closes instead of returning home, which is what a double-tapped back button
+ * looked like. A destination on its way out is no longer RESUMED, and that is the cheapest
+ * way to tell the two taps apart.
+ */
+private fun NavHostController.popOnce() {
+    val entry = currentBackStackEntry ?: return
+    if (entry.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+        popBackStack()
     }
 }
 
@@ -162,6 +185,7 @@ private fun TicketNavHost(
                     else Screen.Onboarding.route
                 navController.navigate(next) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
+                    launchSingleTop = true
                 }
             })
         }
@@ -173,6 +197,7 @@ private fun TicketNavHost(
                 preferences.hasSeenOnboarding = true
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    launchSingleTop = true
                 }
             })
         }
@@ -180,42 +205,45 @@ private fun TicketNavHost(
         composable(Screen.Home.route) {
             HomeScreen(
                 onShowTrains = { fromId, toId ->
-                    navController.navigate(Screen.Result.createRoute(fromId, toId))
+                    navController.navigate(Screen.Result.createRoute(fromId, toId)) { launchSingleTop = true }
                 },
                 onQuickPay = { fromId, toId ->
-                    navController.navigate(Screen.QuickPay.createRoute(fromId, toId))
+                    navController.navigate(Screen.QuickPay.createRoute(fromId, toId)) { launchSingleTop = true }
                 },
-                onViewStations = {
-                    navController.navigate(Screen.MyTickets.route)
+                onViewTickets = {
+                    navController.navigate(Screen.MyTickets.route) { launchSingleTop = true }
+                },
+                onViewLine = {
+                    navController.navigate(Screen.Stations.route) { launchSingleTop = true }
                 },
                 onNavigateToMRTPass = {
-                    navController.navigate(Screen.MRTPassLogin.route)
+                    navController.navigate(Screen.MRTPassLogin.route) { launchSingleTop = true }
                 },
                 onNavigateToNFCResult = {
-                    navController.navigate(Screen.NFCResult.route)
+                    navController.navigate(Screen.NFCResult.route) { launchSingleTop = true }
                 },
                 onNavigateToFareCalculator = {
-                    navController.navigate(Screen.FareCalculator.route)
+                    navController.navigate(Screen.FareCalculator.route) { launchSingleTop = true }
                 },
                 onNavigateToPartnerOffers = {
-                    navController.navigate(Screen.PartnerOffers.route)
+                    navController.navigate(Screen.PartnerOffers.route) { launchSingleTop = true }
                 },
                 viewModel = homeViewModel
             )
         }
 
         composable(Screen.PartnerOffers.route) {
-            PartnerOffersScreen(onBack = { navController.popBackStack() })
+            PartnerOffersScreen(onBack = { navController.popOnce() })
         }
 
         composable(Screen.FareCalculator.route) {
-            FareCalculatorScreen(onBack = { navController.popBackStack() })
+            FareCalculatorScreen(onBack = { navController.popOnce() })
         }
 
         composable(Screen.NFCResult.route) {
             NFCResultScreen(
                 viewModel = homeViewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popOnce() }
             )
         }
 
@@ -231,15 +259,15 @@ private fun TicketNavHost(
             ResultScreen(
                 fromId = fromId,
                 toId   = toId,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onQuickPay = { fId, tId ->
-                    navController.navigate(Screen.QuickPay.createRoute(fId, tId))
+                    navController.navigate(Screen.QuickPay.createRoute(fId, tId)) { launchSingleTop = true }
                 }
             )
         }
 
         composable(Screen.Stations.route) {
-            StationListScreen(onBack = { navController.popBackStack() })
+            StationListScreen(onBack = { navController.popOnce() })
         }
 
         // MRT Pass flow
@@ -248,12 +276,13 @@ private fun TicketNavHost(
                 onLoginSuccess = {
                     navController.navigate(Screen.MRTPassDashboard.route) {
                         popUpTo(Screen.MRTPassLogin.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onOpenWebView = {
-                    navController.navigate(Screen.MRTPassWebView.route)
+                    navController.navigate(Screen.MRTPassWebView.route) { launchSingleTop = true }
                 },
-                onBack    = { navController.popBackStack() },
+                onBack    = { navController.popOnce() },
                 viewModel = mrtPassViewModel
             )
         }
@@ -262,19 +291,20 @@ private fun TicketNavHost(
             MRTPassDashboardScreen(
                 onRecharge = { card ->
                     mrtPassViewModel.selectedCard = card
-                    navController.navigate(Screen.MRTPassRecharge.route)
+                    navController.navigate(Screen.MRTPassRecharge.route) { launchSingleTop = true }
                 },
                 onLogout = {
                     mrtPassViewModel.logout()
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onShowProfile = {
-                    navController.navigate(Screen.MRTPassProfile.route)
+                    navController.navigate(Screen.MRTPassProfile.route) { launchSingleTop = true }
                 },
                 onShowHistory = {
-                    navController.navigate(Screen.MRTPassHistory.route)
+                    navController.navigate(Screen.MRTPassHistory.route) { launchSingleTop = true }
                 },
                 viewModel = mrtPassViewModel
             )
@@ -282,9 +312,9 @@ private fun TicketNavHost(
 
         composable(Screen.MRTPassRecharge.route) {
             MRTPassRechargeScreen(
-                onBack             = { navController.popBackStack() },
+                onBack             = { navController.popOnce() },
                 onProceedToPayment = { amount ->
-                    navController.navigate(Screen.MRTPassPaymentMethod.createRoute(amount))
+                    navController.navigate(Screen.MRTPassPaymentMethod.createRoute(amount)) { launchSingleTop = true }
                 },
                 viewModel = mrtPassViewModel
             )
@@ -292,43 +322,44 @@ private fun TicketNavHost(
 
         composable(Screen.MRTPassHistory.route) {
             RechargeHistoryScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 viewModel = mrtPassViewModel
             )
         }
 
         composable(Screen.MRTPassProfile.route) {
             ProfileScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onLogout = {
                     mrtPassViewModel.logout()
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onUpdateProfile = {
-                    navController.navigate(Screen.UpdateProfile.route)
+                    navController.navigate(Screen.UpdateProfile.route) { launchSingleTop = true }
                 },
                 onUpdatePassword = {
-                    navController.navigate(Screen.UpdatePassword.route)
+                    navController.navigate(Screen.UpdatePassword.route) { launchSingleTop = true }
                 }
             )
         }
 
         composable(Screen.UpdateProfile.route) {
             UpdateProfileScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onUpdateSuccess = {
-                    navController.popBackStack()
+                    navController.popOnce()
                 }
             )
         }
 
         composable(Screen.UpdatePassword.route) {
             UpdatePasswordScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onUpdateSuccess = {
-                    navController.popBackStack()
+                    navController.popOnce()
                 }
             )
         }
@@ -341,15 +372,15 @@ private fun TicketNavHost(
             PaymentMethodSelectionScreen(
                 amount = amount,
                 viewModel = mrtPassViewModel,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onMethodSelected = { method ->
                     mrtPassViewModel.paymentMethod = method.name
                     val name = method.name.lowercase()
                     when {
-                        name.contains("bkash") -> navController.navigate(Screen.BKashPayment.createRoute(amount))
-                        name.contains("card") -> navController.navigate(Screen.CardPayment.createRoute(amount))
-                        name.contains("nagad") -> navController.navigate(Screen.NagadPayment.createRoute(amount))
-                        else -> navController.navigate(Screen.PaymentGateway.createRoute(amount))
+                        name.contains("bkash") -> navController.navigate(Screen.BKashPayment.createRoute(amount)) { launchSingleTop = true }
+                        name.contains("card") -> navController.navigate(Screen.CardPayment.createRoute(amount)) { launchSingleTop = true }
+                        name.contains("nagad") -> navController.navigate(Screen.NagadPayment.createRoute(amount)) { launchSingleTop = true }
+                        else -> navController.navigate(Screen.PaymentGateway.createRoute(amount)) { launchSingleTop = true }
                     }
                 }
             )
@@ -366,9 +397,10 @@ private fun TicketNavHost(
                     mrtPassViewModel.recharge()
                     navController.navigate(Screen.MRTPassDashboard.route) {
                         popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
-                onClose = { navController.popBackStack() }
+                onClose = { navController.popOnce() }
             )
         }
 
@@ -383,9 +415,10 @@ private fun TicketNavHost(
                     mrtPassViewModel.recharge()
                     navController.navigate(Screen.MRTPassDashboard.route) {
                         popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popOnce() }
             )
         }
 
@@ -400,9 +433,10 @@ private fun TicketNavHost(
                     mrtPassViewModel.recharge()
                     navController.navigate(Screen.MRTPassDashboard.route) {
                         popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
-                onClose = { navController.popBackStack() }
+                onClose = { navController.popOnce() }
             )
         }
 
@@ -419,16 +453,17 @@ private fun TicketNavHost(
                         mrtPassViewModel.recharge()
                         navController.navigate(Screen.MRTPassDashboard.route) {
                             popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                            launchSingleTop = true
                         }
                     } else {
-                        navController.popBackStack()
+                        navController.popOnce()
                     }
                 }
             )
         }
 
         composable(Screen.MRTPassWebView.route) {
-            MRTPassWebViewScreen(onBack = { navController.popBackStack() })
+            MRTPassWebViewScreen(onBack = { navController.popOnce() })
         }
 
         composable(
@@ -443,10 +478,10 @@ private fun TicketNavHost(
             QuickPayScreen(
                 fromId = fromId,
                 toId = toId,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 ticketViewModel = ticketViewModel,
                 onTicketClick = { ticketId ->
-                    navController.navigate(Screen.TicketDetails.createRoute(ticketId))
+                    navController.navigate(Screen.TicketDetails.createRoute(ticketId)) { launchSingleTop = true }
                 },
                 onPaymentSuccess = { paidFromId, paidToId ->
                     val newTicket = ticketViewModel.addTicket(
@@ -456,6 +491,7 @@ private fun TicketNavHost(
 
                     navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {
                         popUpTo(Screen.Home.route)
+                        launchSingleTop = true
                     }
                 }
             )
@@ -464,9 +500,9 @@ private fun TicketNavHost(
         composable(Screen.MyTickets.route) {
             MyTicketsScreen(
                 viewModel = ticketViewModel,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popOnce() },
                 onTicketClick = { ticket ->
-                    navController.navigate(Screen.TicketDetails.createRoute(ticket.id))
+                    navController.navigate(Screen.TicketDetails.createRoute(ticket.id)) { launchSingleTop = true }
                 }
             )
         }
@@ -477,22 +513,30 @@ private fun TicketNavHost(
         ) { backStackEntry ->
             val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""
             val ticket = ticketViewModel.tickets.find { it.id == ticketId }
+
+            // The ticket can be gone — cleared, or the process restarted with the id still
+            // in the back stack. Rendering nothing leaves a blank screen, so step back out.
+            if (ticket == null) {
+                LaunchedEffect(ticketId) { navController.popOnce() }
+            }
+
             if (ticket != null) {
                 TicketDetailsScreen(
                     ticket = ticket,
-                    onBack = { navController.popBackStack() },
+                    onBack = { navController.popOnce() },
                     onClose = {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                     onValidate = {
                         // Gate reader accepted the QR — the rider is now inside the station.
                         ticketViewModel.validateTicket(ticketId)
-                        navController.navigate(Screen.Journey.createRoute(ticketId))
+                        navController.navigate(Screen.Journey.createRoute(ticketId)) { launchSingleTop = true }
                     },
                     onOpenJourney = {
-                        navController.navigate(Screen.Journey.createRoute(ticketId))
+                        navController.navigate(Screen.Journey.createRoute(ticketId)) { launchSingleTop = true }
                     },
                     onEntryWindowLapsed = { ticketViewModel.expireTicket(ticketId) }
                 )
@@ -512,11 +556,16 @@ private fun TicketNavHost(
             val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""
             val openExitGate = backStackEntry.arguments?.getBoolean("exit") ?: false
             val ticket = ticketViewModel.tickets.find { it.id == ticketId }
+
+            if (ticket == null) {
+                LaunchedEffect(ticketId) { navController.popOnce() }
+            }
+
             if (ticket != null) {
                 JourneyScreen(
                     ticket = ticket,
                     openExitGateOnLaunch = openExitGate,
-                    onBack = { navController.popBackStack() },
+                    onBack = { navController.popOnce() },
                     onExtendJourney = { station, paymentMethod ->
                         ticketViewModel.extendJourney(ticketId, station, paymentMethod)
                     },
@@ -524,6 +573,7 @@ private fun TicketNavHost(
                     onFinish = {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 )

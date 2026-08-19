@@ -117,9 +117,11 @@ fun LiquidGlassSurface(
     // Read off the theme rather than the system setting, so a forced theme still matches.
     val darkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
-    // Light glass sits on a bright backdrop, so its highlights have to be much stronger
-    // than the dark theme's to register at all.
-    val strength = (if (darkTheme) 1.8f else 2.6f) * light.strengthScale
+    // Light glass sits on a bright backdrop, so its highlights have to be stronger than the
+    // dark theme's to register at all. Both are held low on purpose: a panel is a surface to
+    // read off, and highlights strong enough to notice are highlights strong enough to fight
+    // the text sitting on them.
+    val strength = (if (darkTheme) 0.95f else 1.45f) * light.strengthScale
     val accent = MaterialTheme.colorScheme.primary
 
     Surface(
@@ -142,18 +144,18 @@ fun LiquidGlassSurface(
 
         shape = RoundedCornerShape(cornerRadius),
 
-        // Thinner than a solid panel so the layers below read as depth in the glass, but
-        // never fully transparent — M3 draws its shadow under the fill.
-        color = extendedColors.glass.copy(alpha = if (darkTheme) 0.56f else 0.48f),
+        // Thinner than a solid panel so the layers below still read as depth, but carried
+        // high enough that the panel is a calm ground for text rather than a window.
+        color = extendedColors.glass.copy(alpha = if (darkTheme) 0.70f else 0.66f),
 
         // Lit along the top edge and fading down, the way a glass rim catches light.
         border = border ?: BorderStroke(
             width = 1.dp,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    extendedColors.glassBorder.copy(alpha = 0.7f),
-                    extendedColors.glassBorder.copy(alpha = 0.18f),
-                    extendedColors.glassBorder.copy(alpha = 0.45f)
+                    extendedColors.glassBorder.copy(alpha = 0.55f),
+                    extendedColors.glassBorder.copy(alpha = 0.14f),
+                    extendedColors.glassBorder.copy(alpha = 0.35f)
                 )
             )
         )
@@ -232,7 +234,7 @@ internal fun DrawScope.drawGlassBlobs(
         centerX = size.width * (0.08f + 0.55f * light.flowA),
         centerY = size.height * 0.05f,
         radius = span * 1.25f,
-        alpha = 0.16f
+        alpha = 0.10f
     )
 
     blob(
@@ -240,7 +242,7 @@ internal fun DrawScope.drawGlassBlobs(
         centerX = size.width * (0.9f - 0.5f * light.flowB),
         centerY = size.height * 1.0f,
         radius = span * 1.45f,
-        alpha = 0.14f
+        alpha = 0.08f
     )
 
     blob(
@@ -248,7 +250,7 @@ internal fun DrawScope.drawGlassBlobs(
         centerX = size.width * (0.3f + 0.35f * light.flowC),
         centerY = size.height * 0.95f,
         radius = span * 0.95f,
-        alpha = 0.10f * light.warmth
+        alpha = 0.05f * light.warmth
     )
 }
 
@@ -260,9 +262,9 @@ internal fun DrawScope.drawGlassSheen(sheen: Float, strength: Float) {
     drawRect(
         brush = Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = (0.13f * strength).coerceAtMost(1f)),
+                Color.White.copy(alpha = (0.09f * strength).coerceAtMost(1f)),
                 Color.Transparent,
-                Color.White.copy(alpha = (0.05f * strength).coerceAtMost(1f))
+                Color.White.copy(alpha = (0.03f * strength).coerceAtMost(1f))
             )
         )
     )
@@ -274,7 +276,7 @@ internal fun DrawScope.drawGlassSheen(sheen: Float, strength: Float) {
         brush = Brush.linearGradient(
             colors = listOf(
                 Color.Transparent,
-                Color.White.copy(alpha = (0.1f * strength).coerceAtMost(1f)),
+                Color.White.copy(alpha = (0.05f * strength).coerceAtMost(1f)),
                 Color.Transparent
             ),
             start = Offset(bandStart, 0f),
@@ -297,9 +299,9 @@ internal fun DrawScope.drawGlassRim(strength: Float, cornerRadius: Dp) {
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = (0.3f * strength).coerceAtMost(1f)),
+                Color.White.copy(alpha = (0.20f * strength).coerceAtMost(1f)),
                 Color.Transparent,
-                Color.White.copy(alpha = (0.12f * strength).coerceAtMost(1f))
+                Color.White.copy(alpha = (0.08f * strength).coerceAtMost(1f))
             ),
             start = Offset(0f, 0f),
             end = Offset(size.width * 0.4f, size.height)
@@ -314,7 +316,7 @@ internal fun DrawScope.drawGlassRim(strength: Float, cornerRadius: Dp) {
         brush = Brush.verticalGradient(
             colors = listOf(
                 Color.Transparent,
-                Color.Black.copy(alpha = 0.12f)
+                Color.Black.copy(alpha = 0.08f)
             )
         ),
         topLeft = Offset(inset, inset),

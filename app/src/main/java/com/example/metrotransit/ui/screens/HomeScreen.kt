@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +27,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -54,7 +57,8 @@ import kotlinx.coroutines.tasks.await
 fun HomeScreen(
     onShowTrains: (Int, Int) -> Unit,
     onQuickPay: (Int, Int) -> Unit,
-    onViewStations: () -> Unit,
+    onViewTickets: () -> Unit,
+    onViewLine: () -> Unit,
     onNavigateToMRTPass: () -> Unit,
     onNavigateToNFCResult: () -> Unit,
     onNavigateToFareCalculator: () -> Unit,
@@ -167,43 +171,11 @@ fun HomeScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "MetroTransit BD",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = extendedColors.textPrimary
-                            )
-                        )
-                        Text(
-                            "Dhaka Metro Rail",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = extendedColors.textSecondary
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = onViewStations,
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                    ) {
-                        Icon(
-                            Icons.Default.ConfirmationNumber,
-                            contentDescription = "My Tickets",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+            HomeTopBar(
+                fromStation = viewModel.fromStation,
+                toStation = viewModel.toStation,
+                onViewTickets = onViewTickets,
+                onViewLine = onViewLine
             )
         }
     ) { padding ->
@@ -440,29 +412,218 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val ads = listOf(
-                        AdItem(
-                            title = "১০% ইনস্ট্যান্ট ক্যাশব্যাক",
-                            description = "বিকাশ অ্যাপ দিয়ে পেমেন্ট করলেই অফারটি উপভোগ করুন",
-                            themeColor = Color(0xFFE2136E),
-                            icon = Icons.Default.Payments,
-                            imageUrl = "https://www.bkash.com/uploads/images/Campaign-Banner-En.jpg"
-                        ),
-                        AdItem("Foodpanda", "Hungry? Order now and get free delivery to stations!", Color(0xFFFF2B44), Icons.Default.Restaurant),
-                        AdItem("Travel Insurance", "Insure your journey for just ৳5 per trip.", Color(0xFF007AFF), Icons.Default.Security)
-                    )
+//                    val ads = listOf(
+////                        AdItem(
+////                            title = "১০% ইনস্ট্যান্ট ক্যাশব্যাক",
+////                            description = "বিকাশ অ্যাপ দিয়ে পেমেন্ট করলেই অফারটি উপভোগ করুন",
+////                            themeColor = Color(0xFFE2136E),
+////                            icon = Icons.Default.Payments,
+////                            imageUrl = "https://www.bkash.com/uploads/images/Campaign-Banner-En.jpg"
+////                        ),
+////                        AdItem("Foodpanda", "Hungry? Order now and get free delivery to stations!", Color(0xFFFF2B44), Icons.Default.Restaurant),
+////                        AdItem("Travel Insurance", "Insure your journey for just ৳5 per trip.", Color(0xFF007AFF), Icons.Default.Security)
+//                    )
                     // Bank / card-scheme promotions (designed banners)
                     items(featuredPromos) { promo ->
                         PromoBannerCard(promo, onClick = onNavigateToPartnerOffers)
                     }
-                    items(ads) { ad ->
-                        AdvertisementCard(ad)
+//                    items(ads) { ad ->
+//                        AdvertisementCard(ad)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+//}
+
+/**
+ * The home header, built around the line the app actually serves.
+ *
+ * MRT Line-6 is the only line running in Dhaka today — DMTCL's first — so the bar names it,
+ * carries its map colour (#006747, see [com.example.metrotransit.ui.theme.Line6Light]) in
+ * the mark, and draws the line itself underneath: one dot per station from Uttara North to
+ * the southern terminus, with the rider's own journey lit along it.
+ */
+@Composable
+private fun HomeTopBar(
+    fromStation: MetroStation?,
+    toStation: MetroStation?,
+    onViewTickets: () -> Unit,
+    onViewLine: () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    val line = extendedColors.line6
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(top = 6.dp, bottom = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HomeGutter + 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // The line mark: Line-6 green, the metro glyph, and the route number the way
+            // every metro in the world labels a line.
+            Surface(
+                shape = RoundedCornerShape(13.dp),
+                color = line,
+                modifier = Modifier.size(42.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.DirectionsSubway,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Text(
+                        "6",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        lineHeight = 11.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Dhaka Metro Rail",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = (-0.2).sp,
+                    color = extendedColors.textPrimary
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "MRT Line 6",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = line
+                    )
+                    Text(
+                        "  ·  DMTCL",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extendedColors.textSecondary
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = onViewTickets,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            ) {
+                Icon(
+                    Icons.Default.ConfirmationNumber,
+                    contentDescription = "My Tickets",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Line6Strip(
+            fromStation = fromStation,
+            toStation = toStation,
+            onClick = onViewLine
+        )
+    }
+}
+
+/**
+ * The line, drawn to scale: every station as a dot in running order, the picked journey
+ * filled in Line-6 green between its two ends. Doubles as the header's ornament and as a
+ * read on where the rider is going, without a word of explanation.
+ */
+@Composable
+private fun Line6Strip(
+    fromStation: MetroStation?,
+    toStation: MetroStation?,
+    onClick: () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+    val line = extendedColors.line6
+    val stations = StationData.stations
+
+    val fromIndex = stations.indexOfFirst { it.id == fromStation?.id }
+    val toIndex = stations.indexOfFirst { it.id == toStation?.id }
+    val hasJourney = fromIndex >= 0 && toIndex >= 0 && fromIndex != toIndex
+
+    // The line is the one thing on this page that stands for the whole network, so it is
+    // also the way into the station list — which otherwise had no entry point at all.
+    Box(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = HomeGutter + 8.dp, vertical = 4.dp)
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(14.dp)
+        ) {
+            if (stations.size < 2) return@Canvas
+
+            val y = size.height / 2
+            val step = size.width / (stations.size - 1)
+
+            drawLine(
+                color = line.copy(alpha = 0.22f),
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+
+            if (hasJourney) {
+                val startX = step * minOf(fromIndex, toIndex)
+                val endX = step * maxOf(fromIndex, toIndex)
+                drawLine(
+                    color = line,
+                    start = Offset(startX, y),
+                    end = Offset(endX, y),
+                    strokeWidth = 3.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
+
+            stations.forEachIndexed { index, _ ->
+                val x = step * index
+                val isEnd = index == fromIndex || index == toIndex
+
+                if (isEnd) {
+                    // A ring, the way an interchange is marked on a metro map.
+                    drawCircle(color = line, radius = 4.5.dp.toPx(), center = Offset(x, y))
+                    drawCircle(
+                        color = extendedColors.surface,
+                        radius = 2.dp.toPx(),
+                        center = Offset(x, y)
+                    )
+                } else {
+                    drawCircle(
+                        color = line.copy(alpha = 0.35f),
+                        radius = 2.dp.toPx(),
+                        center = Offset(x, y)
+                    )
+                }
+            }
+        }
+
     }
 }
 
