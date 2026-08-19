@@ -21,8 +21,13 @@ data class Transaction(
 
 class HomeViewModel : ViewModel() {
 
+    // The page opens on a real pair rather than end-to-end: Mirpur 10 is a mid-line
+    // interchange, so the default trip leaves onward stations to add and a fare that is not
+    // the maximum. Looked up by name so reordering the line cannot silently change it.
     var fromStation by mutableStateOf<MetroStation?>(StationData.stations.first())
-    var toStation   by mutableStateOf<MetroStation?>(StationData.stations.last())
+    var toStation   by mutableStateOf<MetroStation?>(
+        StationData.stations.firstOrNull { it.name == "Mirpur 10" } ?: StationData.stations.last()
+    )
 
     var scannedBalance     by mutableStateOf<Double?>(null)
     var recentTransactions by mutableStateOf<List<Transaction>>(emptyList())

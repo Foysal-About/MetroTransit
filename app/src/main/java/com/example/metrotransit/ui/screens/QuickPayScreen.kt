@@ -331,7 +331,7 @@ private fun JourneyCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                JourneyDirection(onSwap = onSwap)
+                JourneyTrack(onSwap = onSwap)
 
                 JourneyStationPicker(
                     label = "To",
@@ -419,10 +419,12 @@ private val SectionGap = 8.dp
 /**
  * The line between the two stations: a dashed track with a train on it, pointing at the
  * destination so the direction of travel is readable at a glance rather than inferred from
- * which side the labels are on. Tapping the train turns the journey around.
+ * which side the labels are on. Tapping the train turns the journey around, where [onSwap]
+ * is given — the journey page shows the same track for a pair that is already paid for and
+ * can no longer be reversed.
  */
 @Composable
-private fun JourneyDirection(onSwap: () -> Unit) {
+fun JourneyTrack(onSwap: (() -> Unit)? = null) {
     val accent = MaterialTheme.colorScheme.primary
     val trackColor = accent.copy(alpha = 0.35f)
 
@@ -464,13 +466,13 @@ private fun JourneyDirection(onSwap: () -> Unit) {
             modifier = Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .clickable { onSwap() },
+                .then(if (onSwap != null) Modifier.clickable { onSwap() } else Modifier),
             shape = CircleShape,
             color = accent.copy(alpha = 0.14f)
         ) {
             Icon(
                 Icons.Default.DirectionsSubway,
-                contentDescription = "Reverse the journey",
+                contentDescription = if (onSwap != null) "Reverse the journey" else null,
                 tint = accent,
                 modifier = Modifier.padding(9.dp)
             )

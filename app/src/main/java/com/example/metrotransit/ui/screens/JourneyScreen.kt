@@ -35,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -52,17 +53,12 @@ import com.example.metrotransit.data.FareCalculator
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.QRTicket
 import com.example.metrotransit.ui.theme.AppFont
+import com.example.metrotransit.ui.theme.MetroSuccess
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-/**
- * How fast the demo train moves between stations. Real trains take ~2 minutes per hop;
- * the showcase runs faster so the whole ride is visible while presenting.
- */
-private const val DEMO_MILLIS_PER_HOP = 12_000L
 
 private fun clockTime(millis: Long): String =
     SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(millis))
@@ -91,13 +87,10 @@ fun JourneyScreen(
         }
     }
 
+    // The route is the trip the ticket paid for, not a position: validating only proves the
+    // rider passed an entry gate. Which train they boarded, and where it is now, is not
+    // something this app can know, so nothing here pretends to track it.
     val route = FareCalculator.route(ticket.fromStationId, ticket.toStationId)
-    val lastIndex = (route.size - 1).coerceAtLeast(0)
-    val hopsTravelled = ((nowMillis - entryMillis) / DEMO_MILLIS_PER_HOP).toInt().coerceAtLeast(0)
-    // Tapping out means the rider is at the exit gate, wherever the demo train had reached.
-    val currentIndex = if (ticket.isCompleted) lastIndex else hopsTravelled.coerceAtMost(lastIndex)
-    val hasArrived = currentIndex >= lastIndex
-    val currentStation = route.getOrNull(currentIndex)
 
     val onwardStations = FareCalculator.onwardStations(ticket.fromStationId, ticket.toStationId)
 
@@ -222,12 +215,10 @@ fun JourneyScreen(
                     .padding(horizontal = 16.dp)
                     .padding(bottom = LocalJourneyBarInset.current)
             ) {
-                LiveStatusCard(
+                EntryStatusCard(
                     ticket = ticket,
                     route = route,
-                    currentIndex = currentIndex,
-                    currentStation = currentStation,
-                    hasArrived = hasArrived,
+                    entryMillis = entryMillis,
                     secondsLeft = ticket.remainingSeconds(nowMillis)
                 )
 
@@ -236,7 +227,6 @@ fun JourneyScreen(
                 RouteTimelineCard(
                     ticket = ticket,
                     route = route,
-                    currentIndex = currentIndex,
                     onwardStations = if (ticket.isCompleted) emptyList() else onwardStations,
                     onAddDestination = { station ->
                         extendTarget = station
@@ -267,143 +257,304 @@ fun JourneyScreen(
     }
 }
 
-/** Big "where am I right now" card, the thing a rider glances at mid-ride. */
+/**
+ * What the app actually knows about the ride, in the same glass card the Ticket Portal uses
+ * for a journey: the gate accepted this ticket at a station, at a time, and the exit window
+ * is running. No position, no "next station" — a validated QR says the rider is inside the
+ * paid area, nothing about which train they took.
+ *
+ * The countdown is the hero number, where the portal card puts the fare: it is the only
+ * thing on this page that changes, and the only thing the rider has to act on.
+ */
 @Composable
-private fun LiveStatusCard(
+private fun EntryStatusCard(
     ticket: QRTicket,
     route: List<MetroStation>,
-    currentIndex: Int,
-    currentStation: MetroStation?,
-    hasArrived: Boolean,
+    entryMillis: Long,
     secondsLeft: Int
 ) {
-    val progress = if (route.size <= 1) 1f else currentIndex.toFloat() / (route.size - 1)
-    val stationsLeft = (route.size - 1 - currentIndex).coerceAtLeast(0)
+    val extendedColors = MetroTransitTheme.extendedColors
+    val accent = MaterialTheme.colorScheme.primary
 
-    Surface(
+    // The one thing genuinely counting down: how much of the exit window has been used.
+    val windowSeconds = (ticket.validityMinutes * 60).coerceAtLeast(1)
+    val windowUsed = ((windowSeconds - secondsLeft).toFloat() / windowSeconds).coerceIn(0f, 1f)
+
+    val stops = (route.size - 1).coerceAtLeast(0)
+    val rideMinutes = FareCalculator.travelMinutes(ticket.fromStationId, ticket.toStationId)
+
+    val overdue = !ticket.isCompleted && secondsLeft <= 0
+    // Five minutes is about one hop plus the walk to a gate — past that it is worth shouting.
+    val expiring = !ticket.isCompleted && secondsLeft in 1..299
+
+    LiquidGlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.primary,
-        shadowElevation = 8.dp
+        cornerRadius = 28.dp,
+        // A wash of whichever colour the state is in, so the card reads before it is read.
+        tint = when {
+            overdue || expiring -> MaterialTheme.colorScheme.error.copy(alpha = 0.14f)
+            ticket.isCompleted -> MetroSuccess.copy(alpha = 0.12f)
+            else -> accent.copy(alpha = 0.12f)
+        }
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.DirectionsSubway,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.9f),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    when {
-                        ticket.isCompleted -> "JOURNEY COMPLETED"
-                        hasArrived -> "ARRIVED — PLEASE TAP OUT"
-                        currentIndex == 0 -> "BOARDING"
-                        else -> "IN TRANSIT"
-                    },
-                    color = Color.White.copy(alpha = 0.85f),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // The ride window started at the gate and grows whenever a stop is added.
-                if (!ticket.isCompleted) {
-                    val running = secondsLeft > 0
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (running) Color.White.copy(alpha = 0.2f)
-                        else MaterialTheme.colorScheme.error
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.AccessTime,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                if (running) "${formatCountdown(secondsLeft)} to exit" else "Exit window over",
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                if (hasArrived) ticket.toStation else "Now at ${currentStation?.name ?: ticket.fromStation}",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontFamily = AppFont.display,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                if (hasArrived) {
-                    "Final stop reached"
-                } else {
-                    "Next: ${route.getOrNull(currentIndex + 1)?.name ?: ticket.toStation}"
+        Column(modifier = Modifier.padding(20.dp)) {
+            StatusPill(
+                text = when {
+                    ticket.isCompleted -> "JOURNEY COMPLETE"
+                    overdue -> "EXIT WINDOW OVER"
+                    else -> "INSIDE THE PAID AREA"
                 },
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodyMedium
+                color = when {
+                    ticket.isCompleted -> MetroSuccess
+                    overdue || expiring -> MaterialTheme.colorScheme.error
+                    else -> TicketAmber
+                },
+                live = !ticket.isCompleted
             )
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = Color.White,
-                trackColor = Color.White.copy(alpha = 0.25f),
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
-                gapSize = 0.dp,
-                drawStopIndicator = {}
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
+            // The pair the ticket was bought for, drawn the way the Ticket Portal draws it.
+            // Bottom-aligned so the track runs through the station names.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
-                Column {
-                    Text("Destination", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
-                    Text(
-                        ticket.toStation,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                GateEnd(
+                    label = "Entered",
+                    station = ticket.fromStation,
+                    caption = clockTime(entryMillis),
+                    dotColor = accent,
+                    modifier = Modifier.weight(1f)
+                )
+
+                JourneyTrack()
+
+                GateEnd(
+                    label = if (ticket.isCompleted) "Exited" else "Exit at",
+                    station = ticket.toStation,
+                    caption = "$stops stop${if (stops == 1) "" else "s"} · ~$rideMinutes min",
+                    dotColor = MetroSuccess,
+                    alignEnd = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Not glassBorder: on dark glass the sheen swallows its left half, and a hairline
+            // that only appears under half the card reads as a rendering fault.
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = extendedColors.textSecondary.copy(alpha = 0.2f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (ticket.isCompleted) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column {
+                        Text(
+                            "Tapped out",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extendedColors.textSecondary
+                        )
+                        Text(
+                            clockTime(ticket.completedAtMillis ?: entryMillis),
+                            color = extendedColors.textPrimary,
+                            fontFamily = AppFont.display,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "Fare paid",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extendedColors.textSecondary
+                        )
+                        Text(
+                            ticket.fare,
+                            color = MetroSuccess,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.AccessTime,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column {
+                        Text(
+                            if (overdue) "Exit window" else "Exit within",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extendedColors.textSecondary
+                        )
+                        Text(
+                            if (overdue) "OVER" else formatCountdown(secondsLeft),
+                            color = if (overdue || expiring) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                extendedColors.textPrimary
+                            },
+                            fontFamily = AppFont.display,
+                            fontSize = 34.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "Window",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extendedColors.textSecondary
+                        )
+                        Text(
+                            "${ticket.validityMinutes} min",
+                            color = extendedColors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Time, not distance. The bar fills as the exit window runs down, which is
+                // the only thing about this ride the app can measure.
+                LinearProgressIndicator(
+                    progress = { windowUsed },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp),
+                    color = if (overdue || expiring) MaterialTheme.colorScheme.error else accent,
+                    trackColor = extendedColors.textSecondary.copy(alpha = 0.2f),
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    gapSize = 0.dp,
+                    drawStopIndicator = {}
+                )
+
+                if (overdue) {
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        if (stationsLeft == 0) "Arrived"
-                        else "$stationsLeft stop${if (stationsLeft > 1) "s" else ""} · ~${stationsLeft * 2} min",
-                        color = Color.White.copy(alpha = 0.9f),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                        "Tap out at any gate — a fare adjustment may apply.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
+        }
+    }
+}
+
+/** One end of the paid journey: the gate, when it happened, and how far it reaches. */
+@Composable
+private fun GateEnd(
+    label: String,
+    station: String,
+    caption: String,
+    dotColor: Color,
+    modifier: Modifier = Modifier,
+    alignEnd: Boolean = false
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!alignEnd) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(dotColor)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                label,
+                color = extendedColors.textSecondary,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            if (alignEnd) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(dotColor)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            station,
+            color = extendedColors.textPrimary,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
+            // Long names ("Bangladesh Secretariat") wrap rather than being cut mid-word.
+            maxLines = 2
+        )
+        Text(
+            caption,
+            color = extendedColors.textSecondary,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = if (alignEnd) TextAlign.End else TextAlign.Start
+        )
+    }
+}
+
+/**
+ * The state of the ticket in one pill. [live] adds the slow pulse the floating journey bar
+ * uses, so a running journey looks running rather than frozen.
+ */
+@Composable
+private fun StatusPill(text: String, color: Color, live: Boolean) {
+    val alpha = if (live) {
+        val transition = rememberInfiniteTransition(label = "statusPulse")
+        val pulse by transition.animateFloat(
+            initialValue = 0.35f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(animation = tween(1100), repeatMode = RepeatMode.Reverse),
+            label = "statusPulseAlpha"
+        )
+        pulse
+    } else {
+        1f
+    }
+
+    Surface(shape = RoundedCornerShape(10.dp), color = color.copy(alpha = 0.16f)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = alpha))
+            )
+            Spacer(modifier = Modifier.width(7.dp))
+            Text(
+                text,
+                color = color,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Black,
+                fontSize = 10.sp,
+                letterSpacing = 0.6.sp
+            )
         }
     }
 }
@@ -412,7 +563,6 @@ private fun LiveStatusCard(
 private fun RouteTimelineCard(
     ticket: QRTicket,
     route: List<MetroStation>,
-    currentIndex: Int,
     onwardStations: List<MetroStation>,
     onAddDestination: (MetroStation) -> Unit
 ) {
@@ -436,18 +586,21 @@ private fun RouteTimelineCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             route.forEachIndexed { index, station ->
-                // Once tapped out the rider is past every station, exit gate included.
-                val isPassed = ticket.isCompleted || index < currentIndex
-                val isCurrent = !ticket.isCompleted && index == currentIndex
                 val isExit = index == route.lastIndex
+                // The gates are the only stations the app has been told about: the entry gate
+                // that validated this ticket, and — once tapped out — the exit gate too. The
+                // stations between them are a printed itinerary, not a record of a trip.
+                val isScanned = ticket.isCompleted || index == 0
                 val extraFare = addedStops[station.id]
 
                 StationTimelineRow(
                     station = station,
                     isFirst = index == 0,
                     isLast = isExit,
-                    isPassed = isPassed,
-                    isCurrent = isCurrent,
+                    isScanned = isScanned,
+                    // Only a finished journey has a confirmed run of stations to draw a solid
+                    // rail through; mid-ride it stays dashed-out grey below the entry gate.
+                    isRailBelowScanned = ticket.isCompleted,
                     trailing = when {
                         index == 0 -> "Entry"
                         isExit -> "Exit"
@@ -608,21 +761,16 @@ private fun StationTimelineRow(
     station: MetroStation,
     isFirst: Boolean,
     isLast: Boolean,
-    isPassed: Boolean,
-    isCurrent: Boolean,
+    /** True where a gate actually scanned this ticket — drawn solid and ticked. */
+    isScanned: Boolean,
+    /** True when the rail continuing below this row is also confirmed. */
+    isRailBelowScanned: Boolean,
     trailing: String?,
     extraFare: Int?
 ) {
     val extendedColors = MetroTransitTheme.extendedColors
     val primary = MaterialTheme.colorScheme.primary
     val upcomingColor = extendedColors.textSecondary.copy(alpha = 0.3f)
-
-    val pulse by rememberInfiniteTransition(label = "stationPulse").animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(1000), repeatMode = RepeatMode.Reverse),
-        label = "stationPulseAlpha"
-    )
 
     Row(
         modifier = Modifier
@@ -640,21 +788,10 @@ private fun StationTimelineRow(
                 modifier = Modifier
                     .weight(1f)
                     .width(2.dp)
-                    .background(if (isFirst) Color.Transparent else if (isPassed || isCurrent) primary else upcomingColor)
+                    .background(if (isFirst) Color.Transparent else if (isScanned) primary else upcomingColor)
             )
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(18.dp)) {
-                if (isCurrent) {
-                    Box(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .background(TicketAmber.copy(alpha = pulse * 0.4f), CircleShape)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(11.dp)
-                            .background(TicketAmber, CircleShape)
-                    )
-                } else if (isPassed) {
+                if (isScanned) {
                     Box(
                         modifier = Modifier
                             .size(14.dp)
@@ -680,7 +817,11 @@ private fun StationTimelineRow(
                 modifier = Modifier
                     .weight(1f)
                     .width(2.dp)
-                    .background(if (isLast) Color.Transparent else if (isPassed) primary else upcomingColor)
+                    .background(
+                        if (isLast) Color.Transparent
+                        else if (isScanned && isRailBelowScanned) primary
+                        else upcomingColor
+                    )
             )
         }
 
@@ -696,8 +837,10 @@ private fun StationTimelineRow(
                 Text(
                     station.name,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isCurrent || isLast) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isPassed || isCurrent || isLast) extendedColors.textPrimary
+                    // The two ends of the ticket carry the weight; the stops between them are
+                    // reference, so they stay quiet.
+                    fontWeight = if (isFirst || isLast) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isScanned || isLast) extendedColors.textPrimary
                     else extendedColors.textSecondary
                 )
                 if (extraFare != null) {
@@ -1040,6 +1183,11 @@ private fun AddDestinationSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // The sheet's own content scrolls. Without a scrollable here an upward fling
+                // is handed to the sheet itself, which drags to full height and bounces back
+                // — the flicker. With one, nested scroll absorbs the gesture, and tall
+                // content stays reachable on a short screen.
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 28.dp)
         ) {
@@ -1063,12 +1211,7 @@ private fun AddDestinationSheet(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (station == null) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .heightIn(max = 340.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     onwardStations.forEach { onward ->
                         val fare = FareCalculator.extensionFare(
                             ticket.fromStationId,
@@ -1085,44 +1228,61 @@ private fun AddDestinationSheet(
                 }
             } else {
                 // ── Fare difference ──────────────────────────────────
-                Surface(
+                // The same glass card, gate pair and hero number the journey page uses, so
+                // the sheet reads as that page asking a question rather than a separate form.
+                LiquidGlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.primary
+                    cornerRadius = 20.dp,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                ticket.toStation,
-                                color = Color.White.copy(alpha = 0.85f),
-                                style = MaterialTheme.typography.bodyMedium
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            GateEnd(
+                                label = "Exit now",
+                                station = ticket.toStation,
+                                caption = "${ticket.fare} paid",
+                                dotColor = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f)
                             )
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .size(16.dp)
-                            )
-                            Text(
-                                station.name,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
+
+                            JourneyTrack()
+
+                            GateEnd(
+                                label = "Exit instead",
+                                station = station.name,
+                                caption = "+$extraMinutes min window",
+                                dotColor = MetroSuccess,
+                                alignEnd = true,
+                                modifier = Modifier.weight(1f)
                             )
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        HorizontalDivider(
+                            thickness = 0.5.dp,
+                            color = extendedColors.textSecondary.copy(alpha = 0.2f)
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.Bottom
                         ) {
                             Column {
-                                Text("Additional fare", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
+                                Text(
+                                    "Additional fare",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = extendedColors.textSecondary
+                                )
                                 Text(
                                     FareCalculator.format(extraFare),
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontSize = 30.sp,
                                     fontFamily = AppFont.display,
                                     fontWeight = FontWeight.Black
@@ -1130,15 +1290,15 @@ private fun AddDestinationSheet(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    "New total ${FareCalculator.format(ticket.totalFare + extraFare)}",
-                                    color = Color.White.copy(alpha = 0.85f),
+                                    "New total",
                                     style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
+                                    color = extendedColors.textSecondary
                                 )
                                 Text(
-                                    "+$extraMinutes min exit window",
-                                    color = Color.White.copy(alpha = 0.7f),
-                                    fontSize = 10.sp
+                                    FareCalculator.format(ticket.totalFare + extraFare),
+                                    color = extendedColors.textPrimary,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }

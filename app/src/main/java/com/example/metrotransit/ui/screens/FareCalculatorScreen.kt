@@ -110,8 +110,13 @@ fun FareCalculatorScreen(onBack: () -> Unit) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(28.dp),
-                        color = extendedColors.glass,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
+                        // Near-opaque, not panel glass: this card is pulled up over the blue
+                        // header, and at glass opacity the header read straight through the
+                        // station names. It carries a shadow for the same reason — a card
+                        // overlapping a header has to look like it sits above it.
+                        color = extendedColors.surface.copy(alpha = 0.97f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder),
+                        shadowElevation = 6.dp
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
