@@ -49,9 +49,9 @@ class MRTPassViewModel : ViewModel() {
         PaymentMethod("Nagad", "Mobile Banking", R.drawable.nagad_logo),
         PaymentMethod("Rocket", "Mobile Banking", R.drawable.rocket_logo),
         PaymentMethod("Upay", "Mobile Banking", R.drawable.upay_logo),
-        PaymentMethod("Internet Banking", "All major banks"),
-        PaymentMethod("Visa", "Card"),
-        PaymentMethod("Mastercard", "Card"),
+        // Visa and Mastercard were separate rows for the same card form; one row now, with
+        // the two marks shown on it.
+        PaymentMethod("Debit/Credit Card", "Card"),
     )
 
     fun login(): Boolean {

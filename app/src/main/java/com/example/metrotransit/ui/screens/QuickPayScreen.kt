@@ -192,18 +192,7 @@ fun BuyTicketContent(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            PaymentGroupLabel("Mobile wallets")
-            mobileWalletBrands.forEach { brand ->
-                PaymentMethodItem(
-                    brand = brand,
-                    isSelected = selectedPaymentMethod == brand.id,
-                    onClick = { selectedPaymentMethod = brand.id }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
-            PaymentGroupLabel("Cards & banking")
-            cardAndBankBrands.forEach { brand ->
+            paymentBrands.forEach { brand ->
                 PaymentMethodItem(
                     brand = brand,
                     isSelected = selectedPaymentMethod == brand.id,
@@ -420,8 +409,12 @@ private fun JourneyCard(
 /** The card's outer breathing room. */
 private val CardPadding = 20.dp
 
-/** The gap that separates the journey from the money below it. */
-private val SectionGap = 20.dp
+/**
+ * The gap that separates the journey from the money below it, above and below the divider.
+ * Kept tight: the station rows already carry 8dp of their own tap padding underneath, so a
+ * larger value here opened a band of dead glass across the middle of the card.
+ */
+private val SectionGap = 8.dp
 
 /**
  * The line between the two stations: a dashed track with a train on it, pointing at the
@@ -593,19 +586,6 @@ private fun JourneyStationPicker(
             }
         }
     }
-}
-
-/** A quiet label over a run of payment rows. */
-@Composable
-fun PaymentGroupLabel(text: String) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Black,
-        letterSpacing = 1.sp,
-        color = MetroTransitTheme.extendedColors.textSecondary,
-        modifier = Modifier.padding(start = 8.dp, top = 6.dp, bottom = 2.dp)
-    )
 }
 
 /**

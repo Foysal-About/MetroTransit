@@ -74,6 +74,12 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MetroTransitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    /**
+     * Which family to set the app in. Defaults to [AppTypeface.Preferred], so the choice
+     * normally lives in one place in Fonts.kt; pass it here to override for a preview, a
+     * screenshot test, or a side-by-side comparison.
+     */
+    typeface: AppTypeface = AppTypeface.Preferred,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -127,7 +133,7 @@ fun MetroTransitTheme(
     }
 
     val context = LocalContext.current
-    val fonts = remember(context) { appFontFamilies(context) }
+    val fonts = remember(context, typeface) { appFontFamilies(context, typeface) }
     val typography = remember(fonts) { appTypography(fonts.display, fonts.text) }
 
     CompositionLocalProvider(

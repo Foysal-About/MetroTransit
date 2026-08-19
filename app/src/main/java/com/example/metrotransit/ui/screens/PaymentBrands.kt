@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -51,12 +50,14 @@ data class PaymentBrand(
 )
 
 /**
- * Every method offered for a ticket purchase, in the order they are shown.
+ * Every method offered for a ticket purchase, in the order they are shown. One flat list,
+ * not wallets-then-cards: the run is short enough to read at a glance, and grouping it only
+ * added headings the rider has to skip past.
  *
  * Rocket is drawn from its icon rather than its asset: the supplied logo is a wide lock-up
  * with a wordmark, which shrinks to an unreadable strip in a square tile.
  */
-val mobileWalletBrands = listOf(
+val paymentBrands = listOf(
     PaymentBrand(
         id = "bKash",
         name = "bKash",
@@ -82,22 +83,12 @@ val mobileWalletBrands = listOf(
         color = Color(0xFF00ADEF),
         logoRes = R.drawable.upay_logo,
         logoFillsTile = true
-    )
-)
-
-/** Cards and bank rails, kept apart from the wallets so a long list stays scannable. */
-val cardAndBankBrands = listOf(
+    ),
     PaymentBrand(
         id = "Card",
         name = "Debit/Credit Card",
         color = Color(0xFF0061C1),
         icon = Icons.Default.CreditCard
-    ),
-    PaymentBrand(
-        id = "NetBanking",
-        name = "Internet Banking",
-        color = Color(0xFF0F766E),
-        icon = Icons.Default.AccountBalance
     )
 )
 
@@ -109,11 +100,10 @@ fun paymentBrandFor(name: String): PaymentBrand? {
     val needle = name.lowercase().trim()
     if (needle.isEmpty()) return null
 
-    return (mobileWalletBrands + cardAndBankBrands).firstOrNull {
+    return paymentBrands.firstOrNull {
         needle.contains(it.id.lowercase()) ||
             needle.contains(it.name.lowercase()) ||
-            (it.id == "Card" && (needle.contains("card") || needle.contains("visa") || needle.contains("master"))) ||
-            (it.id == "NetBanking" && (needle.contains("bank") && !needle.contains("mobile")))
+            (it.id == "Card" && (needle.contains("card") || needle.contains("visa") || needle.contains("master")))
     }
 }
 

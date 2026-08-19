@@ -91,26 +91,10 @@ fun PaymentMethodSelectionScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Recommended section
-                SectionHeader("Recommended method(s)")
-                PaymentMethodItem(
-                    name = "Credit/Debit Card",
-                    showCardLogos = true,
-                    onClick = { 
-                        onMethodSelected(PaymentMethod("Card", "Card")) 
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Other methods
-                SectionHeader("Other Payment Methods")
-                
-                val otherMethods = viewModel.paymentMethods.filter { 
-                    val name = it.name.lowercase()
-                    !name.contains("visa") && 
-                    !name.contains("mastercard")
-                }
+                // Every method in one list. Splitting them into "recommended" and "other",
+                // or by wallet vs card, only asked the rider to read headings before finding
+                // the one mark they were already looking for.
+                val methods = viewModel.paymentMethods
 
                 Surface(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -119,13 +103,15 @@ fun PaymentMethodSelectionScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.glassBorder)
                 ) {
                     Column {
-                        otherMethods.forEachIndexed { index, method ->
+                        methods.forEachIndexed { index, method ->
                             PaymentMethodItem(
-                                name = if (method.name.lowercase() == "bkash") "bKash" else method.name,
+                                name = method.name,
+                                // The card row stands for every scheme, so it carries the marks.
+                                showCardLogos = method.type == "Card",
                                 isInsideContainer = true,
                                 onClick = { onMethodSelected(method) }
                             )
-                            if (index < otherMethods.size - 1) {
+                            if (index < methods.size - 1) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     thickness = 0.5.dp,
@@ -150,19 +136,6 @@ fun PaymentMethodSelectionScreen(
             }
         }
     }
-}
-
-@Composable
-fun SectionHeader(title: String) {
-    val extendedColors = MetroTransitTheme.extendedColors
-    Text(
-        text = title.uppercase(),
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Black,
-        color = extendedColors.textSecondary,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-    )
 }
 
 @Composable

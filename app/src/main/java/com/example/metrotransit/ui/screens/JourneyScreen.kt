@@ -169,7 +169,17 @@ fun JourneyScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            // Lifted clear of the floating journey bar: this screen only exists while a
+            // journey is running, so the bar is always over the bottom of it and an
+            // unpadded host slides the confirmation in underneath.
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = LocalJourneyBarInset.current)
+            ) { data ->
+                GlassSnackbar(data)
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -1146,7 +1156,7 @@ private fun AddDestinationSheet(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    (mobileWalletBrands + cardAndBankBrands).forEach { brand ->
+                    paymentBrands.forEach { brand ->
                         PaymentMethodItem(
                             brand = brand,
                             isSelected = selectedMethod == brand.id,

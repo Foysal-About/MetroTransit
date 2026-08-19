@@ -1,35 +1,67 @@
-# Typography — San Francisco (SF Pro)
+# Typography — SF Pro (default) or Avenir Next
 
-The app's entire type scale is defined in terms of two families:
+The app can be set in either of two custom typefaces, or in the device font. The whole type
+scale is defined in terms of two *cuts* rather than two named fonts:
 
-| Family | Used for | Compose styles |
+| Cut | Used for | Compose styles |
 | --- | --- | --- |
-| **SF Pro Display** | Large headings, fare amounts, timers — anything 20sp and up | `displayLarge…displaySmall`, `headlineLarge…headlineSmall`, `titleLarge`, plus call sites tagged `AppFont.display` |
-| **SF Pro Text** | Body copy, labels, buttons, navigation, chips — below 20sp | `titleMedium`, `titleSmall`, `body*`, `label*`, and the default style every `Text` inherits |
+| **display** | Large headings, fare amounts, timers — anything 20sp and up | `displayLarge…displaySmall`, `headlineLarge…headlineSmall`, `titleLarge`, plus call sites tagged `AppFont.display` |
+| **text** | Body copy, labels, buttons, navigation, chips — below 20sp | `titleMedium`, `titleSmall`, `body*`, `label*`, and the default style every `Text` inherits |
 
-The 20sp split is Apple's own optical-size guidance for when to switch from SF Text to
-SF Display.
+The 20sp split is Apple's own optical-size guidance for when to switch from SF Text to SF
+Display. Avenir Next has no optical-size pair, so it supplies the same files for both cuts
+and the split has nothing to do — that is expected, not a fallback.
+
+## The switch
+
+One line, in `ui/theme/Fonts.kt`:
+
+```kotlin
+var Preferred by mutableStateOf(SanFrancisco)   // ← AppTypeface.Companion; the default
+```
+
+SF Pro is the default. Set it to `AvenirNext` for Avenir Next, or `System` for the device
+font. Three ways to drive it:
+
+```kotlin
+// 1. Permanent choice — edit the default in Fonts.kt.
+var Preferred by mutableStateOf(AvenirNext)
+
+// 2. At runtime, from anywhere (a debug row, a settings toggle). It is snapshot state, so
+//    the entire UI restyles on the next frame — no restart.
+AppTypeface.Preferred = AppTypeface.AvenirNext
+
+// 3. For one subtree only — a preview, a screenshot test, a side-by-side.
+MetroTransitTheme(typeface = AppTypeface.AvenirNext) { … }
+```
+
+`MetroTransitTheme.fonts.typeface` reports which family actually loaded (null = platform
+font), with `isSanFrancisco` / `isAvenirNext` for a quick check.
 
 ## The font files are not in this repository
 
-SF Pro is Apple's typeface, and its license permits use only for designing and developing
-software for Apple platforms. Shipping the files inside an Android APK is outside that
-license, so they are deliberately **not** committed here — that decision is yours to make.
+SF Pro is Apple's typeface and its license permits use only for developing software for
+Apple platforms. Avenir Next is licensed separately (it ships with macOS/iOS, and is sold
+by Monotype for other uses). Shipping either inside an Android APK is a licensing decision
+that is yours to make, so neither is committed here.
 
-Because of that, the app resolves the fonts **by name at runtime** instead of through
+Because of that, both families are resolved **by name at runtime** instead of through
 generated `R.font` constants (see `ui/theme/Fonts.kt`). The consequence:
 
-- **Files absent** → the app falls back to the platform sans-serif and looks exactly as it
-  does today. Nothing crashes, nothing needs commenting out.
-- **Files present** → every screen picks up San Francisco on next launch. No code change.
+- **Files absent** → the app falls back and looks exactly as it does today. Nothing
+  crashes, nothing needs commenting out.
+- **Files present** → every screen picks up the family on next launch. No code change.
 
-`MetroTransitTheme.fonts.isSanFrancisco` tells you which of the two is live, if you want to
-assert it in a test or surface it on a debug screen.
+The fallback order is: the family you asked for → the other custom family → the platform
+sans-serif. With `SanFrancisco` as the default, dropping in only `avenir_next_*` files still
+styles the app in Avenir Next rather than leaving it on the device font.
 
-## Activating SF Pro
+## Activating a family
 
 Drop the files into `app/src/main/res/font/` using these exact names (lowercase and
 underscores are an Android resource requirement). `.otf` and `.ttf` both work.
+
+### SF Pro (the default)
 
 ```
 app/src/main/res/font/
@@ -49,22 +81,44 @@ app/src/main/res/font/
   sf_pro_text_black.otf
 ```
 
-Notes:
+Apple distributes SF Pro from <https://developer.apple.com/fonts/> as a `.dmg` of `.otf`
+files, named e.g. `SF-Pro-Text-Semibold.otf` → rename to `sf_pro_text_semibold.otf`.
+
+### Avenir Next
+
+One prefix, since the family has no Display/Text pair:
+
+```
+app/src/main/res/font/
+  avenir_next_ultralight.otf      ← optional
+  avenir_next_regular.otf
+  avenir_next_medium.otf
+  avenir_next_demibold.otf        ← maps to FontWeight.SemiBold
+  avenir_next_bold.otf
+  avenir_next_heavy.otf           ← maps to FontWeight.ExtraBold
+```
+
+Avenir Next's own cut names are what the suffixes follow: UltraLight, Regular, Medium,
+DemiBold, Bold, Heavy. `avenir_next_light`, `_semibold` and `_black` are accepted as
+aliases if that is how your files are named. On macOS the family lives in
+`/System/Library/Fonts/Avenir Next.ttc`; a `.ttc` collection has to be split into
+individual `.otf`/`.ttf` files before Android can read it.
+
+Notes for both:
 
 - **Partial sets are fine.** Only the weights present get registered; Compose synthesises
-  the rest. The app uses Normal, Medium, SemiBold, Bold, ExtraBold and Black.
-- **One family is enough to start.** If you supply only `sf_pro_text_*`, it stands in for
-  Display as well (and vice versa).
-- Apple distributes SF Pro from <https://developer.apple.com/fonts/> as a `.dmg` of `.otf`
-  files, named e.g. `SF-Pro-Text-Semibold.otf` → rename to `sf_pro_text_semibold.otf`.
+  the rest. The app uses Normal, Medium, SemiBold, Bold, ExtraBold and Black — Avenir Next
+  has no Black cut, so Heavy stands in for it.
+- **One cut is enough to start.** If you supply only `sf_pro_text_*`, it stands in for
+  display as well (and vice versa).
 
 ## If you need something ship-safe instead
 
-If bundling SF Pro is not acceptable for distribution, the usual substitute on Android is
-**Inter** (SIL Open Font License, redistributable) — it is metrically close to SF and was
-designed for the same purpose. Swapping it in is a one-line change in
-`Fonts.kt`: add the `inter_*` files and use them as the fallback in `appFontFamilies()`
-instead of `FontFamily.SansSerif`.
+If bundling a licensed family is not acceptable for distribution, the usual substitutes on
+Android are **Inter** (metrically close to SF) or **Nunito Sans** / **Montserrat** (closer
+to Avenir's geometric humanist shapes) — all under the SIL Open Font License and
+redistributable. Adding one is a small change in `Fonts.kt`: give `AppTypeface` another
+entry with the new prefix, and the rest of the app needs no edits.
 
 ## Deliberate exception
 

@@ -3,12 +3,13 @@ package com.example.metrotransit.ui.screens
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ConfirmationNumber
 import androidx.compose.material.icons.rounded.DirectionsSubway
-import androidx.compose.material.icons.rounded.EventBusy
 import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.example.metrotransit.R
 import com.example.metrotransit.data.TicketStatus
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 
@@ -31,7 +32,7 @@ data class TicketStatusStyle(
 /**
  * The icons say what the ticket *is*, not what a screen does with it: a ticket stub while it
  * is yours to use, a train while you are riding on it, a completed tick once you are out, and
- * a struck-through date when its day has passed. The rounded set matches the app's chevrons.
+ * a crossed-out ticket once it has run out. The rounded set matches the app's chevrons.
  */
 @Composable
 fun ticketStatusStyle(status: String): TicketStatusStyle {
@@ -47,7 +48,8 @@ fun ticketStatusStyle(status: String): TicketStatusStyle {
         else -> TicketStatusStyle(
             extendedColors.textSecondary,
             extendedColors.textSecondary.copy(alpha = 0.14f),
-            Icons.Rounded.EventBusy
+            // Drawn as an outline with no fill, so it takes the tint like the built-in icons.
+            ImageVector.vectorResource(R.drawable.expired)
         )
     }
 }
