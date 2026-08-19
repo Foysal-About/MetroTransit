@@ -1,5 +1,7 @@
 package com.example.metrotransit.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -28,6 +30,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,7 @@ fun TicketDetailsScreen(
 ) {
     val extendedColors = MetroTransitTheme.extendedColors
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     val isExpired = ticket.isExpired
     // Counts the entry window before validation and the ride window after it. Both are
@@ -306,7 +310,7 @@ fun TicketDetailsScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     cornerRadius = 16.dp,
-                    onClick = { /* Share ticket */ }
+                    onClick = { context.shareTicket(ticket, timeString) }
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
@@ -323,6 +327,38 @@ fun TicketDetailsScreen(
             }
         }
     }
+}
+
+/**
+ * Hands the ticket to whatever the rider shares with — chat, mail, notes. Plain text on
+ * purpose: the QR code is only good at the gate that scans this phone, so what travels is
+ * the trip itself plus the ticket ID a station desk can look up.
+ */
+private fun Context.shareTicket(ticket: QRTicket, timeString: String) {
+    val summary = buildString {
+        appendLine(if (ticket.isInTransit) "Metro Boarding Pass" else "Metro Entry Ticket")
+        appendLine()
+        appendLine("${ticket.fromStation} \u2192 ${ticket.toStation}")
+        appendLine(ticket.dateTime)
+        appendLine("Fare: ${ticket.fare}")
+        appendLine("Status: ${ticket.status}")
+        // The countdown only means something while a window is still running.
+        if (!ticket.isExpired && !ticket.isCompleted) {
+            appendLine(if (ticket.isValidated) "Exit within: $timeString" else "Validate within: $timeString")
+        }
+        ticket.extensions.forEach { extension ->
+            appendLine("Extended to ${extension.toStationName} (+${FareCalculator.format(extension.extraFare)})")
+        }
+        appendLine()
+        append("Ticket ID: ${ticket.id}")
+    }
+
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "Metro Ticket ${ticket.id}")
+        putExtra(Intent.EXTRA_TEXT, summary)
+    }
+    startActivity(Intent.createChooser(intent, "Share Ticket"))
 }
 
 /**

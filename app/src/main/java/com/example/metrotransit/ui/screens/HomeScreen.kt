@@ -485,13 +485,13 @@ private fun HomeTopBar(
                         tint = Color.White,
                         modifier = Modifier.size(17.dp)
                     )
-                    Text(
-                        "6",
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Black,
-                        lineHeight = 11.sp
-                    )
+//                    Text(
+//                        "6",
+//                        color = Color.White,
+//                        fontSize = 10.sp,
+//                        fontWeight = FontWeight.Black,
+//                        lineHeight = 11.sp
+//                    )
                 }
             }
 
