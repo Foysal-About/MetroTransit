@@ -31,8 +31,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,10 +43,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.*
+import com.example.metrotransit.R
 import com.example.metrotransit.data.MetroStation
 import com.example.metrotransit.data.StationData
 import com.example.metrotransit.nfc.NfcManager
-import com.example.metrotransit.ui.theme.MetroSuccess
 import com.example.metrotransit.ui.theme.MetroTransitTheme
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.google.android.gms.location.LocationServices
@@ -211,8 +213,8 @@ fun HomeScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             JourneyPoint(
-                                icon = Icons.Default.MyLocation,
-                                color = MaterialTheme.colorScheme.primary
+                                painter = painterResource(R.drawable.from_station),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             StationSelector(
@@ -256,18 +258,21 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Box(
+                            Column(
                                 modifier = Modifier
                                     .width(26.dp)
                                     .fillMaxHeight(),
-                                contentAlignment = Alignment.Center
+                                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .width(2.dp)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                                )
+                                repeat(4) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(3.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f))
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             IconButton(
@@ -293,8 +298,8 @@ fun HomeScreen(
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             JourneyPoint(
-                                icon = Icons.Default.LocationOn,
-                                color = MetroSuccess
+                                painter = painterResource(R.drawable.to_station),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             StationSelector(
@@ -1048,17 +1053,17 @@ fun CardFeatureItem(icon: ImageVector, label: String, themeColor: Color) {
 }
 
 @Composable
-fun JourneyPoint(icon: ImageVector, color: Color) {
-    Surface(
-        shape = CircleShape,
-        color = color.copy(alpha = 0.14f),
-        modifier = Modifier.size(26.dp)
+fun JourneyPoint(painter: Painter, color: Color) {
+    // Bare glyph, no chip behind it — the dotted rail is what ties the two points together.
+    Box(
+        modifier = Modifier.size(26.dp),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
-            icon,
+            painter,
             contentDescription = null,
             tint = color,
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.size(20.dp)
         )
     }
 }

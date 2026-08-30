@@ -49,8 +49,13 @@ fun QuickPayScreen(
     fromId: Int,
     toId: Int,
     onBack: () -> Unit,
-    /** Carries the stations actually on screen — the rider can change them here. */
-    onPaymentSuccess: (Int, Int) -> Unit,
+    /**
+     * Confirming the fare hands the rider to the SSLCOMMERZ page. Carries the stations actually
+     * on screen rather than the ones in the route — the rider can change them here.
+     */
+    onProceedToPayment: (Int, Int) -> Unit,
+    /** What a cancelled or declined session left behind, said once above the confirm card. */
+    gatewayNotice: String? = null,
     ticketViewModel: TicketViewModel? = null,
     onTicketClick: (String) -> Unit = {}
 ) {
@@ -126,7 +131,8 @@ fun QuickPayScreen(
                             fromStationId = toStationId
                             toStationId = previousFrom
                         },
-                        onPaymentSuccess = onPaymentSuccess
+                        onProceedToPayment = onProceedToPayment,
+                        gatewayNotice = gatewayNotice
                     )
                     1 -> MyTicketsContent(
                         viewModel = ticketViewModel,
@@ -145,22 +151,12 @@ fun BuyTicketContent(
     onFromChange: (MetroStation) -> Unit,
     onToChange: (MetroStation) -> Unit,
     onSwap: () -> Unit,
-    onPaymentSuccess: (Int, Int) -> Unit
+    onProceedToPayment: (Int, Int) -> Unit,
+    gatewayNotice: String? = null
 ) {
     val scrollState = rememberScrollState()
-    val extendedColors = MetroTransitTheme.extendedColors
-    
+
     val amount = FareCalculator.fare(fromStation, toStation)
-
-    var selectedPaymentMethod by rememberSaveable { mutableStateOf<String?>(null) }
-    var isProcessing by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isProcessing) {
-        if (isProcessing) {
-            kotlinx.coroutines.delay(1500)
-            onPaymentSuccess(fromStation?.id ?: 0, toStation?.id ?: 0)
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -177,57 +173,124 @@ fun BuyTicketContent(
             onSwap = onSwap
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // ── Payment ──────────────────────────────────────────────────
+        // The fare is confirmed here and paid somewhere else. SSLCOMMERZ's hosted checkout is
+        // a page of its own, so this one ends at the confirm button — no card fields sit next
+        // to the ticket they would be paying for.
+        if (gatewayNotice != null) {
+            GatewayNotice(
+                message = gatewayNotice,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+            )
+        }
 
-        // ── Payment Methods ──────────────────────────────────────────
-        Text(
-            "Select Payment Method",
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = extendedColors.textPrimary
+        ConfirmPaymentCard(
+            amount = amount,
+            // A journey needs both of its ends before there is anything to charge for.
+            enabled = fromStation != null && toStation != null,
+            onConfirm = { onProceedToPayment(fromStation?.id ?: 0, toStation?.id ?: 0) }
         )
 
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            paymentBrands.forEach { brand ->
-                PaymentMethodItem(
-                    brand = brand,
-                    isSelected = selectedPaymentMethod == brand.id,
-                    onClick = { selectedPaymentMethod = brand.id }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+}
+
+/**
+ * The handover: what happens next, and the button that starts it.
+ *
+ * The button carries the amount rather than the destination — the rider is confirming a fare,
+ * and the gateway page is only how it gets paid — so the card above it says where they are
+ * about to be taken and what will come back.
+ */
+@Composable
+private fun ConfirmPaymentCard(
+    amount: Int,
+    enabled: Boolean,
+    onConfirm: () -> Unit
+) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    LiquidGlassSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        cornerRadius = 24.dp
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = MetroSuccess,
+                    modifier = Modifier.size(15.dp)
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { isProcessing = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            enabled = selectedPaymentMethod != null && !isProcessing,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = extendedColors.textSecondary.copy(alpha = 0.2f)
-            )
-        ) {
-            if (isProcessing) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    if (selectedPaymentMethod != null) "Pay ৳$amount" else "Select a Method",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    "Secure payment",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = extendedColors.textPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                "The SSLCOMMERZ payment window opens over this page to take a card, mobile " +
+                    "wallet or bank. The ticket is issued once the payment comes back approved.",
+                style = MaterialTheme.typography.bodySmall,
+                color = extendedColors.textSecondary
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onConfirm,
+                enabled = enabled,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Proceed to Payment · ৳$amount", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+/** A cancelled or declined session, said once above the confirm card. */
+@Composable
+private fun GatewayNotice(message: String, modifier: Modifier = Modifier) {
+    val extendedColors = MetroTransitTheme.extendedColors
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.error.copy(alpha = 0.10f)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                message,
+                style = MaterialTheme.typography.bodySmall,
+                color = extendedColors.textPrimary
+            )
+        }
     }
 }
 

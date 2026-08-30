@@ -4,20 +4,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.metrotransit.R
 import com.example.metrotransit.data.MRTPassCard
 import com.example.metrotransit.data.PaymentMethod
 import com.example.metrotransit.data.RechargeTransaction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+/**
+ * The MRT Pass portal's own state. Signing in is not part of it — the app has one account,
+ * handled by [com.example.metrotransit.viewmodel.AuthViewModel] before the home dashboard —
+ * so the portal opens straight onto the rider's cards.
+ */
 class MRTPassViewModel : ViewModel() {
-    var email by mutableStateOf("")
-    var password by mutableStateOf("")
-    var passwordVisible by mutableStateOf(false)
-    
-    private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn = _isLoggedIn.asStateFlow()
 
     private val _cards = MutableStateFlow(listOf(
         MRTPassCard("SYED FOYSAL", "MP31C23112300869", "Active", 35.00, "MRT"),
@@ -44,44 +45,59 @@ class MRTPassViewModel : ViewModel() {
     var rechargeAmount by mutableStateOf("")
     var paymentMethod by mutableStateOf("Bkash")
 
+    /**
+     * How a top-up is paid for: the gateway, and nothing beside it.
+     *
+     * The wallets and the card form used to be rows of their own here, each with a screen
+     * behind it collecting the money itself. A top-up is collected by SSLCOMMERZ, so the
+     * channels belong on the gateway's page rather than on ours — listing bKash next to the
+     * gateway that also carries bKash is the same channel offered twice, by two different
+     * parties, and only one of them is really taking the money.
+     */
     val paymentMethods: List<PaymentMethod> = listOf(
-        PaymentMethod("bKash", "Mobile Banking", R.drawable.bkash_logo),
-        PaymentMethod("Nagad", "Mobile Banking", R.drawable.nagad_logo),
-        PaymentMethod("Rocket", "Mobile Banking", R.drawable.rocket_logo),
-        PaymentMethod("Upay", "Mobile Banking", R.drawable.upay_logo),
-        // Visa and Mastercard were separate rows for the same card form; one row now, with
-        // the two marks shown on it.
-        PaymentMethod("Debit/Credit Card", "Card"),
+        PaymentMethod("SSLCOMMERZ", "Gateway")
     )
 
-    fun login(): Boolean {
-        return if (email == "1" && password == "1") {
-            _isLoggedIn.value = true
-            true
-        } else {
-            false
-        }
-    }
-
-    fun logout() {
-        _isLoggedIn.value = false
-        email = ""
-        password = ""
-    }
-
-    fun recharge(): Boolean {
+    /**
+     * Credit the selected card with the amount the rider asked for.
+     *
+     * [paymentId] is the gateway's own reference for the payment that funded it — `tran_id` on
+     * an SSLCOMMERZ top-up. Given one, the top-up is also written into the recharge history,
+     * so a rider looking for what they just paid finds it by the reference the gateway showed
+     * them rather than by the amount and the time of day.
+     */
+    fun recharge(paymentId: String? = null): Boolean {
         val amount = rechargeAmount.toDoubleOrNull() ?: 0.0
-        if (amount <= 0 || selectedCard == null) return false
-        
+        val card = selectedCard ?: return false
+        if (amount <= 0) return false
+
         val updatedCards = _cards.value.map {
-            if (it.cardNumber == selectedCard?.cardNumber) {
+            if (it.cardNumber == card.cardNumber) {
                 it.copy(balance = it.balance + amount)
             } else {
                 it
             }
         }
         _cards.value = updatedCards
-        selectedCard = updatedCards.find { it.cardNumber == selectedCard?.cardNumber }
+        selectedCard = updatedCards.find { it.cardNumber == card.cardNumber }
+
+        if (paymentId != null) {
+            val entry = RechargeTransaction(
+                sl = 1,
+                cardNumber = card.cardNumber,
+                paymentId = paymentId,
+                dateTime = SimpleDateFormat("d MMM yyyy, hh:mm a", Locale.US).format(Date()),
+                amount = amount.toInt().toString(),
+                paymentStatus = "Payment Successful",
+                rechargeStatus = "Recharge Successful"
+            )
+            // The list runs newest first and its serial numbers run with it, so everything
+            // below the new row shifts down one rather than the new row taking a number
+            // above the top of the list.
+            _rechargeHistory.value = listOf(entry) +
+                _rechargeHistory.value.mapIndexed { index, row -> row.copy(sl = index + 2) }
+        }
+
         rechargeAmount = ""
         return true
     }

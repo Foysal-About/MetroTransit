@@ -34,6 +34,7 @@ fun MRTPassDashboardScreen(
     onLogout: () -> Unit,
     onShowProfile: () -> Unit,
     onShowHistory: () -> Unit,
+    onOpenWebsite: () -> Unit,
     viewModel: MRTPassViewModel
 ) {
     val cards by viewModel.cards.collectAsState()
@@ -135,6 +136,20 @@ fun MRTPassDashboardScreen(
                         } 
                     },
                     icon = { Icon(Icons.Default.AccountBox, contentDescription = null, tint = extendedColors.textSecondary) },
+                    modifier = itemModifier,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Official Website", fontWeight = FontWeight.Medium, color = extendedColors.textPrimary) },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            drawerState.close()
+                            onOpenWebsite()
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Language, contentDescription = null, tint = extendedColors.textSecondary) },
                     modifier = itemModifier,
                     shape = RoundedCornerShape(16.dp),
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)

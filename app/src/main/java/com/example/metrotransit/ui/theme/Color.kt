@@ -42,3 +42,15 @@ val MetroSuccess = Color(0xFF10B981)
  */
 val Line6Light = Color(0xFF006747)
 val Line6Dark = Color(0xFF19B37B)
+
+/**
+ * The line's colour as it appears on signage — a solid green carrying white content, with a
+ * lighter stop of the same hue for gradients across a filled surface.
+ *
+ * These do not lift for the dark theme the way [Line6Dark] does. That lift exists so a
+ * translucent fill or a hairline still registers against the navy backdrop; on a solid green
+ * plate it would only cost the white sitting on top its contrast. The official value carries
+ * white in either theme, which is the whole point of it on a station sign.
+ */
+val Line6Signage = Color(0xFF006747)
+val Line6SignageTint = Color(0xFF00925F)

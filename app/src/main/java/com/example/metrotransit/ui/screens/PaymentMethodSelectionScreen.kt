@@ -28,7 +28,9 @@ fun PaymentMethodSelectionScreen(
     amount: String,
     viewModel: MRTPassViewModel,
     onBack: () -> Unit,
-    onMethodSelected: (PaymentMethod) -> Unit
+    onMethodSelected: (PaymentMethod) -> Unit,
+    /** What a cancelled, declined or timed-out gateway session left behind. */
+    gatewayNotice: String? = null
 ) {
     val extendedColors = MetroTransitTheme.extendedColors
     Scaffold(
@@ -60,6 +62,36 @@ fun PaymentMethodSelectionScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = LocalJourneyBarInset.current)
             ) {
+                // An unpaid session outranks the voucher pitch, so it goes above it.
+                if (gatewayNotice != null) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.10f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                gatewayNotice,
+                                color = extendedColors.textPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
                 // Voucher Banner (Glass variant)
                 Surface(
                     modifier = Modifier
@@ -106,6 +138,13 @@ fun PaymentMethodSelectionScreen(
                         methods.forEachIndexed { index, method ->
                             PaymentMethodItem(
                                 name = method.name,
+                                // The gateway row is not a channel, so it says what it opens
+                                // rather than leaving its name to stand on its own.
+                                subtitle = if (method.type == "Gateway") {
+                                    "Cards · Mobile Banking · Internet Banking"
+                                } else {
+                                    null
+                                },
                                 // The card row stands for every scheme, so it carries the marks.
                                 showCardLogos = method.type == "Card",
                                 isInsideContainer = true,
@@ -141,6 +180,7 @@ fun PaymentMethodSelectionScreen(
 @Composable
 fun PaymentMethodItem(
     name: String,
+    subtitle: String? = null,
     showCardLogos: Boolean = false,
     isInsideContainer: Boolean = false,
     onClick: () -> Unit
@@ -157,14 +197,23 @@ fun PaymentMethodItem(
             PaymentBrandTile(brand = paymentBrandFor(name), fallbackName = name)
 
             Spacer(modifier = Modifier.width(14.dp))
-            
-            Text(
-                text = name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = extendedColors.textPrimary,
-                modifier = Modifier.weight(1f)
-            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = extendedColors.textPrimary
+                )
+                if (subtitle != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        fontSize = 11.sp,
+                        color = extendedColors.textSecondary
+                    )
+                }
+            }
 
             if (showCardLogos) {
                 Row(

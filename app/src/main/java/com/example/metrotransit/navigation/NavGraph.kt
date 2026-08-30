@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,24 +24,27 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.example.metrotransit.ui.screens.*
 import com.example.metrotransit.ui.theme.MetroTransitTheme
+import com.example.metrotransit.viewmodel.AuthViewModel
 import com.example.metrotransit.viewmodel.HomeViewModel
 import com.example.metrotransit.viewmodel.MRTPassViewModel
 import com.example.metrotransit.viewmodel.TicketViewModel
 import com.example.metrotransit.data.AppPreferences
+import com.example.metrotransit.data.FareCalculator
 import com.example.metrotransit.data.StationData
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Onboarding : Screen("onboarding")
+    object Login : Screen("login")
     object Home : Screen("home")
     object Result : Screen("result/{fromId}/{toId}") {
         fun createRoute(fromId: Int, toId: Int) = "result/$fromId/$toId"
     }
     object Stations : Screen("stations")
-    object MRTPassLogin : Screen("mrtpass_login")
     object MRTPassDashboard : Screen("mrtpass_dashboard")
     object MRTPassRecharge : Screen("mrtpass_recharge")
     object MRTPassHistory : Screen("mrtpass_history")
@@ -67,6 +73,18 @@ sealed class Screen(val route: String) {
     object QuickPay : Screen("quick_pay/{fromId}/{toId}") {
         fun createRoute(fromId: Int, toId: Int) = "quick_pay/$fromId/$toId"
     }
+    /** The SSLCOMMERZ gateway, on its own page — the fare page hands over to it, not to a panel. */
+    object SslCommerzCheckout : Screen("ssl_checkout/{fromId}/{toId}") {
+        fun createRoute(fromId: Int, toId: Int) = "ssl_checkout/$fromId/$toId"
+    }
+    /**
+     * SSLCOMMERZ's other front end — the hosted page a top-up is redirected to. A route rather
+     * than a dialog, because that is the whole difference between the two: the rider is taken
+     * to the gateway's own page instead of having it opened over the app's.
+     */
+    object SslCommerzTopUp : Screen("ssl_topup/{amount}") {
+        fun createRoute(amount: String) = "ssl_topup/$amount"
+    }
     object MyTickets : Screen("my_tickets")
     object TicketDetails : Screen("ticket_details/{ticketId}") {
         fun createRoute(ticketId: String) = "ticket_details/$ticketId"
@@ -78,11 +96,15 @@ sealed class Screen(val route: String) {
     }
 }
 
+/** Where a returning gateway page leaves its unpaid status for the fare page to read. */
+private const val GatewayNoticeKey = "ssl_gateway_notice"
+
 @Composable
 fun NavGraph(
     navController: NavHostController,
     homeViewModel: HomeViewModel          // ← received from MainActivity, not created here
 ) {
+    val authViewModel: AuthViewModel = viewModel()
     val mrtPassViewModel: MRTPassViewModel = viewModel()
     val ticketViewModel: TicketViewModel = viewModel()
 
@@ -91,7 +113,26 @@ fun NavGraph(
     val activeJourney = ticketViewModel.tickets.firstOrNull { it.isInTransit }
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val onJourneyScreen = currentRoute?.startsWith("journey/") == true
-    val showJourneyBar = activeJourney != null && currentRoute != Screen.Splash.route
+    // Nothing rides over the screens the rider is not signed in behind yet.
+    val onEntryScreen = currentRoute in setOf(
+        Screen.Splash.route,
+        Screen.Onboarding.route,
+        Screen.Login.route
+    )
+    val showJourneyBar = activeJourney != null && !onEntryScreen
+
+    // Navigation restores its back stack when the process is rebuilt; a session that was not
+    // kept does not come back with it. Without this, a rider whose app was killed in the
+    // background returns straight into a signed-in screen. The front door is the only gate
+    // the app has, so it has to hold after a restore too.
+    LaunchedEffect(authViewModel.isSignedIn, currentRoute) {
+        if (!authViewModel.isSignedIn && currentRoute != null && !onEntryScreen) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.id) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -116,6 +157,7 @@ fun NavGraph(
                 TicketNavHost(
                     navController = navController,
                     homeViewModel = homeViewModel,
+                    authViewModel = authViewModel,
                     mrtPassViewModel = mrtPassViewModel,
                     ticketViewModel = ticketViewModel
                 )
@@ -168,9 +210,20 @@ private fun NavHostController.popOnce() {
 private fun TicketNavHost(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
+    authViewModel: AuthViewModel,
     mrtPassViewModel: MRTPassViewModel,
     ticketViewModel: TicketViewModel
 ) {
+    // Signing out drops the session and takes the whole stack back to the front door, so
+    // pressing back cannot walk into a signed-in screen afterwards.
+    val signOut: () -> Unit = {
+        authViewModel.signOut()
+        navController.navigate(Screen.Login.route) {
+            popUpTo(Screen.Home.route) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route
@@ -179,10 +232,13 @@ private fun TicketNavHost(
             val context = LocalContext.current
             val preferences = remember { AppPreferences(context) }
             SplashScreen(onNavigateToHome = {
-                // Welcome page on the first launch only; straight to the dashboard after.
-                val next =
-                    if (preferences.hasSeenOnboarding) Screen.Home.route
-                    else Screen.Onboarding.route
+                // Welcome page on the first launch only, then the front door — unless the
+                // rider asked to be kept signed in, in which case straight to the dashboard.
+                val next = when {
+                    !preferences.hasSeenOnboarding -> Screen.Onboarding.route
+                    authViewModel.isSignedIn -> Screen.Home.route
+                    else -> Screen.Login.route
+                }
                 navController.navigate(next) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
                     launchSingleTop = true
@@ -195,11 +251,26 @@ private fun TicketNavHost(
             val preferences = remember { AppPreferences(context) }
             OnboardingScreen(onContinue = {
                 preferences.hasSeenOnboarding = true
-                navController.navigate(Screen.Home.route) {
+                navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Onboarding.route) { inclusive = true }
                     launchSingleTop = true
                 }
             })
+        }
+
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onSignedIn = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onOpenWebsite = {
+                    navController.navigate(Screen.MRTPassWebView.route) { launchSingleTop = true }
+                },
+                viewModel = authViewModel
+            )
         }
 
         composable(Screen.Home.route) {
@@ -217,7 +288,7 @@ private fun TicketNavHost(
                     navController.navigate(Screen.Stations.route) { launchSingleTop = true }
                 },
                 onNavigateToMRTPass = {
-                    navController.navigate(Screen.MRTPassLogin.route) { launchSingleTop = true }
+                    navController.navigate(Screen.MRTPassDashboard.route) { launchSingleTop = true }
                 },
                 onNavigateToNFCResult = {
                     navController.navigate(Screen.NFCResult.route) { launchSingleTop = true }
@@ -270,41 +341,23 @@ private fun TicketNavHost(
             StationListScreen(onBack = { navController.popOnce() })
         }
 
-        // MRT Pass flow
-        composable(Screen.MRTPassLogin.route) {
-            MRTPassLoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.MRTPassDashboard.route) {
-                        popUpTo(Screen.MRTPassLogin.route) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onOpenWebView = {
-                    navController.navigate(Screen.MRTPassWebView.route) { launchSingleTop = true }
-                },
-                onBack    = { navController.popOnce() },
-                viewModel = mrtPassViewModel
-            )
-        }
-
+        // MRT Pass flow. The portal has no sign-in of its own — the rider is already signed
+        // in to the app by the time they can reach it — so it opens on their cards.
         composable(Screen.MRTPassDashboard.route) {
             MRTPassDashboardScreen(
                 onRecharge = { card ->
                     mrtPassViewModel.selectedCard = card
                     navController.navigate(Screen.MRTPassRecharge.route) { launchSingleTop = true }
                 },
-                onLogout = {
-                    mrtPassViewModel.logout()
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
+                onLogout = signOut,
                 onShowProfile = {
                     navController.navigate(Screen.MRTPassProfile.route) { launchSingleTop = true }
                 },
                 onShowHistory = {
                     navController.navigate(Screen.MRTPassHistory.route) { launchSingleTop = true }
+                },
+                onOpenWebsite = {
+                    navController.navigate(Screen.MRTPassWebView.route) { launchSingleTop = true }
                 },
                 viewModel = mrtPassViewModel
             )
@@ -330,13 +383,7 @@ private fun TicketNavHost(
         composable(Screen.MRTPassProfile.route) {
             ProfileScreen(
                 onBack = { navController.popOnce() },
-                onLogout = {
-                    mrtPassViewModel.logout()
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
+                onLogout = signOut,
                 onUpdateProfile = {
                     navController.navigate(Screen.UpdateProfile.route) { launchSingleTop = true }
                 },
@@ -369,21 +416,86 @@ private fun TicketNavHost(
             arguments = listOf(navArgument("amount") { type = NavType.StringType })
         ) { backStackEntry ->
             val amount = backStackEntry.arguments?.getString("amount") ?: "0.0"
+
+            // A hosted session that came back without the money says so here, on the page the
+            // rider picks a method from — not on the gateway page they have already left.
+            val gatewayNotice by backStackEntry.savedStateHandle
+                .getStateFlow<String?>(GatewayNoticeKey, null)
+                .collectAsState()
+
             PaymentMethodSelectionScreen(
                 amount = amount,
                 viewModel = mrtPassViewModel,
+                gatewayNotice = gatewayNotice,
                 onBack = { navController.popOnce() },
                 onMethodSelected = { method ->
                     mrtPassViewModel.paymentMethod = method.name
-                    val name = method.name.lowercase()
-                    when {
-                        name.contains("bkash") -> navController.navigate(Screen.BKashPayment.createRoute(amount)) { launchSingleTop = true }
-                        name.contains("card") -> navController.navigate(Screen.CardPayment.createRoute(amount)) { launchSingleTop = true }
-                        name.contains("nagad") -> navController.navigate(Screen.NagadPayment.createRoute(amount)) { launchSingleTop = true }
-                        else -> navController.navigate(Screen.PaymentGateway.createRoute(amount)) { launchSingleTop = true }
+                    // Last attempt's notice belongs to last attempt.
+                    backStackEntry.savedStateHandle[GatewayNoticeKey] = null
+                    // One way to pay for a top-up, so there is nothing to branch on. The
+                    // channel is picked on the gateway's own page, which is where the rider
+                    // is about to be.
+                    navController.navigate(Screen.SslCommerzTopUp.createRoute(amount)) {
+                        launchSingleTop = true
                     }
                 }
             )
+        }
+
+        // The hosted checkout, as a page of its own. Unlike the ticket gateway this is not a
+        // dialog: a redirect replaces what the rider was looking at, and the whole point of
+        // the address bar at the top of it is that there is nothing of ours around it.
+        composable(
+            route = Screen.SslCommerzTopUp.route,
+            arguments = listOf(navArgument("amount") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val card = mrtPassViewModel.selectedCard
+
+            // No card to credit means nothing to collect for — a process rebuild that landed
+            // back on this route with the portal's selection gone.
+            if (card == null) {
+                LaunchedEffect(Unit) { navController.popOnce() }
+            }
+
+            /** Back to the method list, carrying why the money never moved. */
+            val returnUnpaid: (String) -> Unit = { message ->
+                navController.previousBackStackEntry
+                    ?.savedStateHandle?.set(GatewayNoticeKey, message)
+                navController.popOnce()
+            }
+
+            if (card != null) {
+                SslCommerzTopUpCheckoutScreen(
+                    // The total the recharge page worked out, gateway fee included — the
+                    // rider is charged that, and the card is credited the amount underneath it.
+                    amount = backStackEntry.arguments?.getString("amount")?.toDoubleOrNull() ?: 0.0,
+                    mrtCardNumber = card.cardNumber,
+                    cardHolderName = card.cardName,
+                    onCancel = { returnUnpaid("Payment cancelled. Nothing was charged.") },
+                    onResult = { ipn ->
+                        when (ipn.status) {
+                            SslCommerzStatus.VALID -> {
+                                // Credited against the gateway's own reference, so the row it
+                                // leaves in the history is the one on the rider's receipt.
+                                mrtPassViewModel.recharge(ipn.tranId)
+                                navController.navigate(Screen.MRTPassDashboard.route) {
+                                    popUpTo(Screen.MRTPassDashboard.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+
+                            SslCommerzStatus.CANCELLED ->
+                                returnUnpaid("Payment cancelled. Nothing was charged.")
+
+                            SslCommerzStatus.FAILED ->
+                                returnUnpaid("The bank declined the transaction. Try another method.")
+
+                            SslCommerzStatus.EXPIRED ->
+                                returnUnpaid("The payment session timed out. Nothing was charged — start again.")
+                        }
+                    }
+                )
+            }
         }
 
         composable(
@@ -475,23 +587,92 @@ private fun TicketNavHost(
         ) { backStackEntry ->
             val fromId = backStackEntry.arguments?.getInt("fromId") ?: 0
             val toId = backStackEntry.arguments?.getInt("toId") ?: 0
+
+            // A session that came back unpaid says so here rather than on the gateway page it
+            // was abandoned on. Held on this entry's own handle, so it survives the gateway
+            // being popped and dies with the fare page itself.
+            val gatewayNotice by backStackEntry.savedStateHandle
+                .getStateFlow<String?>(GatewayNoticeKey, null)
+                .collectAsState()
+
             QuickPayScreen(
                 fromId = fromId,
                 toId = toId,
                 onBack = { navController.popOnce() },
+                gatewayNotice = gatewayNotice,
                 ticketViewModel = ticketViewModel,
                 onTicketClick = { ticketId ->
                     navController.navigate(Screen.TicketDetails.createRoute(ticketId)) { launchSingleTop = true }
                 },
-                onPaymentSuccess = { paidFromId, paidToId ->
-                    val newTicket = ticketViewModel.addTicket(
-                        from = StationData.stations.find { it.id == paidFromId },
-                        to = StationData.stations.find { it.id == paidToId }
-                    )
+                onProceedToPayment = { payFromId, payToId ->
+                    // Last attempt's notice belongs to last attempt.
+                    backStackEntry.savedStateHandle[GatewayNoticeKey] = null
+                    navController.navigate(
+                        Screen.SslCommerzCheckout.createRoute(payFromId, payToId)
+                    ) { launchSingleTop = true }
+                }
+            )
+        }
 
-                    navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {
-                        popUpTo(Screen.Home.route)
-                        launchSingleTop = true
+        // A dialog destination, not a page: the gateway comes up over the fare page and dims
+        // it, the way the hosted Easy Checkout overlays the merchant's own site. Its own X and
+        // back gesture are the only ways out, so a tap on the dimmed page cannot drop a live
+        // session — hence both dismissals off.
+        dialog(
+            route = Screen.SslCommerzCheckout.route,
+            dialogProperties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false
+            ),
+            arguments = listOf(
+                navArgument("fromId") { type = NavType.IntType },
+                navArgument("toId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val fromId = backStackEntry.arguments?.getInt("fromId") ?: 0
+            val toId = backStackEntry.arguments?.getInt("toId") ?: 0
+            val fromStation = StationData.stations.find { it.id == fromId }
+            val toStation = StationData.stations.find { it.id == toId }
+
+            /** Back to the fare page, carrying why the money never moved. */
+            val returnUnpaid: (String) -> Unit = { message ->
+                navController.previousBackStackEntry
+                    ?.savedStateHandle?.set(GatewayNoticeKey, message)
+                navController.popOnce()
+            }
+
+            SslCommerzCheckoutScreen(
+                // Re-read from the ids rather than passed through the route: the gateway must
+                // charge for the journey the ticket will be issued for, not a stale fare.
+                amount = FareCalculator.fare(fromStation, toStation),
+                productName = "Single Journey · ${fromStation?.name ?: "?"} → ${toStation?.name ?: "?"}",
+                onCancel = { returnUnpaid("Payment cancelled. Nothing was charged.") },
+                onResult = { result ->
+                    when (result.status) {
+                        SslCommerzStatus.VALID -> {
+                            val newTicket = ticketViewModel.addTicket(
+                                from = fromStation,
+                                to = toStation
+                            )
+                            // The gateway and the fare page both go: the payment is done, and
+                            // neither is somewhere to come back to from a live ticket.
+                            navController.navigate(Screen.TicketDetails.createRoute(newTicket.id)) {
+                                popUpTo(Screen.Home.route)
+                                launchSingleTop = true
+                            }
+                        }
+
+                        SslCommerzStatus.CANCELLED ->
+                            returnUnpaid("Payment cancelled. Nothing was charged.")
+
+                        SslCommerzStatus.FAILED ->
+                            returnUnpaid("The bank declined the transaction. Try another method.")
+
+                        // The popup keeps no clock of its own, so this only arrives if the
+                        // session was already dead when it was opened. Same landing either way.
+                        SslCommerzStatus.EXPIRED ->
+                            returnUnpaid("The payment session expired. Nothing was charged.")
                     }
                 }
             )

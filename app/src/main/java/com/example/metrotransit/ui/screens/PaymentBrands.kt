@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -93,12 +94,28 @@ val paymentBrands = listOf(
 )
 
 /**
+ * The gateway itself, which is not one of the methods above and deliberately not in that list:
+ * [paymentBrands] is the run of channels offered for a single fare, and SSLCOMMERZ is all of
+ * them at once. Only the MRT Pass top-up offers it, so it is looked up by name and never
+ * iterated with the rest.
+ */
+val SslCommerzBrand = PaymentBrand(
+    id = "SSLCOMMERZ",
+    name = "SSLCOMMERZ",
+    color = Color(0xFF2B62E8),
+    icon = Icons.Default.Shield,
+    iconOnBrandColor = true
+)
+
+/**
  * The brand behind a free-text method name (the MRT Pass portal stores methods as strings),
  * or null when nothing matches and the caller should fall back to an initial.
  */
 fun paymentBrandFor(name: String): PaymentBrand? {
     val needle = name.lowercase().trim()
     if (needle.isEmpty()) return null
+
+    if (needle.contains("sslcommerz") || needle.contains("ssl commerz")) return SslCommerzBrand
 
     return paymentBrands.firstOrNull {
         needle.contains(it.id.lowercase()) ||
